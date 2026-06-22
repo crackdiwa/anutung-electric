@@ -4,7 +4,7 @@
 
 A complete, single-file web app — no build, no server, no installation. Just open `index.html`.
 
-🔗 **Live demo:** https://REPLACE_USERNAME.github.io/anutung-electric/
+🔗 **Live demo:** https://crackdiwa.github.io/anutung-electric/
 
 ---
 
