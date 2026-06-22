@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Anutung Electric — AI-powered electricity bill tracker, simulator, and saving advisor for Thai households."/>
+<title>Anutung Electric | AI Energy Advisor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { 50:'#E6F0FF',100:'#CCE1FF',200:'#99C3FF',300:'#66A5FF',400:'#2D7DD2',500:'#0F4C81',600:'#0C3E6B',700:'#093055',800:'#06223F',900:'#031428',950:'#0A2540' },
+        },
+        fontFamily: { sans:['Plus Jakarta Sans','ui-sans-serif','system-ui'] },
+        transitionTimingFunction: { spring:'cubic-bezier(0.34,1.56,0.64,1)', spring2:'cubic-bezier(0.22,1.1,0.36,1)' },
+        keyframes: {
+          fadeUp:  { '0%':{opacity:'0',transform:'translateY(20px)'},'100%':{opacity:'1',transform:'translateY(0)'} },
+          popIn:   { '0%':{opacity:'0',transform:'scale(.94) translateY(10px)'},'100%':{opacity:'1',transform:'scale(1) translateY(0)'} },
+          sliceIn: { '0%':{transform:'translateX(110%)',opacity:'.6'},'100%':{transform:'translateX(0)',opacity:'1'} },
+          shimmer: { '0%':{'background-position':'-200% 0'},'100%':{'background-position':'200% 0'} },
+          pulseGlow:{ '0%,100%':{opacity:'.5',transform:'scale(1)'},'50%':{opacity:'1',transform:'scale(1.08)'} },
+        },
+        animation: {
+          'fade-up':'fadeUp .5s cubic-bezier(.22,1.1,.36,1) both',
+          'pop-in':'popIn .45s cubic-bezier(.34,1.56,.64,1) both',
+          'slice-in':'sliceIn .4s cubic-bezier(.34,1.56,.64,1) both',
+          shimmer:'shimmer 1.6s linear infinite',
+          'pulse-glow':'pulseGlow 2.8s ease-in-out infinite',
+        },
+      }
+    }
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Kanit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Spline 3D viewer (vanilla web component) -->
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
+<style>
+:root{ --navy-950:#0A2540; --navy-500:#0F4C81; --navy-50:#E6F0FF; }
+*,::before,::after{box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans','Kanit',sans-serif;background:#f8faff;color:#0A2540;overflow-x:hidden;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#CCE1FF;border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:#99C3FF}
+/* segmented controls */
+.seg{position:relative;display:inline-flex;background:#E6F0FF;border:1.5px solid #CCE1FF;border-radius:999px;padding:3px;gap:0}
+.seg-pill{position:absolute;top:3px;left:3px;height:calc(100% - 6px);border-radius:999px;background:linear-gradient(135deg,#0F4C81,#2D7DD2);transition:transform .38s cubic-bezier(.34,1.56,.64,1),width .38s cubic-bezier(.34,1.56,.64,1);z-index:0;box-shadow:0 2px 8px rgba(15,76,129,.32)}
+.seg-btn{position:relative;z-index:1;border:none;background:transparent;padding:5px 11px;font-size:11.5px;font-weight:700;border-radius:999px;cursor:pointer;color:#0F4C81;transition:color .25s;font-family:inherit;white-space:nowrap}
+.seg-btn.active{color:#fff}
+.seg-btn:hover:not(.active){color:#0F4C81;background:rgba(15,76,129,.08);border-radius:999px}
+/* skeleton shimmer */
+.skeleton{background:linear-gradient(90deg,#E6F0FF 25%,#CCE1FF 50%,#E6F0FF 75%);background-size:200% 100%;animation:shimmer 1.6s linear infinite;border-radius:10px}
+/* input number no spinner */
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+/* range input */
+input[type=range]{-webkit-appearance:none;height:6px;border-radius:3px;background:#CCE1FF;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#0F4C81,#2D7DD2);box-shadow:0 2px 10px rgba(15,76,129,.45);cursor:pointer;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+/* ecobot panel */
+#ecobotPanel{transition:transform .42s cubic-bezier(.34,1.56,.64,1),box-shadow .4s ease,background-color 0.3s ease,border-color 0.3s ease}
+#ecobotPanel.closed{transform:translateX(110%)}
+/* card spring hover */
+.card-spring{transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s cubic-bezier(.22,1.1,.36,1),background-color 0.3s ease}
+.card-spring:hover{transform:translateY(-4px) scale(1.01)}
+/* profile card selected */
+.profile-selected{outline:2px solid #0F4C81;outline-offset:2px}
+/* toast */
+#toast{transition:all .42s cubic-bezier(.34,1.56,.64,1)}
+/* focus rings */
+input:focus,select:focus,textarea:focus{outline:2px solid #0F4C81;outline-offset:1px}
+/* gradient text */
+.grad-text{background:linear-gradient(135deg,#0F4C81,#2D7DD2);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* SVG icon sizing */
+.icon-xs{width:14px;height:14px}
+.icon-sm{width:16px;height:16px}
+.icon-md{width:20px;height:20px}
+.icon-lg{width:24px;height:24px}
+/* ═══ THEME VARIABLES ═══ */
+:root{
+  --surface:#ffffff;--surface-2:#f8faff;--surface-3:#E6F0FF;
+  --border-col:#CCE1FF;--border-light-col:#E6F0FF;
+  --text-pri:#0A2540;--text-sec:#0F4C81;--text-muted-col:#99C3FF;
+  --nav-bg:rgba(255,255,255,0.95);--input-bg:#f8faff;
+  --chart-text-col:#99C3FF;--chart-grid-col:rgba(230,240,255,0.8);
+  --body-bg:#f8faff;
+}
+[data-theme="dark"]{
+  --surface:#0A1628;--surface-2:#0F1E36;--surface-3:#1A2A4E;
+  --border-col:#1E3355;--border-light-col:#152A4A;
+  --text-pri:#E8F0FE;--text-sec:#8AAED4;--text-muted-col:#4A6A90;
+  --nav-bg:rgba(5,14,28,0.97);--input-bg:#0F1E36;
+  --chart-text-col:#4A6A90;--chart-grid-col:rgba(30,51,85,0.4);
+  --body-bg:#050E1C;
+}
+/* Transitions */
+body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease}
+/* Dark mode class overrides */
+[data-theme="dark"] body{background:var(--body-bg)!important;background-image:none!important;color:var(--text-pri)!important}
+[data-theme="dark"] header{background-color:var(--nav-bg)!important;border-color:var(--border-col)!important}
+[data-theme="dark"] .bg-white{background-color:var(--surface)!important}
+[data-theme="dark"] .bg-navy-50,[data-theme="dark"] .bg-navy-50\/50{background-color:var(--surface-2)!important}
+[data-theme="dark"] .hover\:bg-navy-50:hover{background-color:var(--surface-3)!important}
+[data-theme="dark"] .border-navy-100,[data-theme="dark"] .border-navy-200{border-color:var(--border-col)!important}
+[data-theme="dark"] .text-navy-950{color:var(--text-pri)!important}
+[data-theme="dark"] .text-navy-600,[data-theme="dark"] .text-navy-700{color:var(--text-sec)!important}
+[data-theme="dark"] .text-navy-500{color:var(--text-sec)!important}
+[data-theme="dark"] .text-navy-400,[data-theme="dark"] .text-navy-300{color:var(--text-muted-col)!important}
+[data-theme="dark"] input[type=number],[data-theme="dark"] input[type=text],[data-theme="dark"] select,[data-theme="dark"] textarea{background-color:var(--input-bg)!important;color:var(--text-pri)!important;border-color:var(--border-col)!important}
+[data-theme="dark"] input[type=range]{background:var(--border-col)!important}
+[data-theme="dark"] .seg{background:var(--surface-2)!important;border-color:var(--border-col)!important}
+[data-theme="dark"] .seg-btn:not(.active){color:var(--text-sec)!important}
+[data-theme="dark"] #ecobotPanel,[data-theme="dark"] #ecobotPanel .bg-navy-50{background-color:var(--surface)!important;border-color:var(--border-col)!important}
+[data-theme="dark"] #ecobotLog .bg-navy-50{background-color:var(--surface-2)!important;color:var(--text-pri)!important}
+[data-theme="dark"] #modalBox{background-color:var(--surface)!important}
+[data-theme="dark"] #modalOverlay{background-color:rgba(5,14,28,0.75)!important}
+[data-theme="dark"] #toast{background-color:var(--surface-3)!important;color:var(--text-pri)!important}
+[data-theme="dark"] .stat-card{background-color:var(--surface)!important;border-color:var(--border-col)!important}
+[data-theme="dark"] .tab-btn:not(.active){color:var(--text-muted-col)!important}
+[data-theme="dark"] .tab-btn:not(.active):hover{background-color:var(--surface-2)!important}
+[data-theme="dark"] .skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:var(--border-col)}
+/* Thai font */
+[data-lang="th"] body,[data-lang="th"] .seg-btn,[data-lang="th"] .tab-btn,[data-lang="th"] .feat-pill,[data-lang="th"] .mtab{font-family:'Kanit','Plus Jakarta Sans',sans-serif!important}
+[data-lang="th"] body{line-height:1.6}
+/* ═══ MOBILE BOTTOM TAB BAR ═══ */
+.mtab-bar{background:var(--surface);border-top:1px solid var(--border-col);box-shadow:0 -3px 18px rgba(10,37,64,.07);padding-bottom:env(safe-area-inset-bottom);transition:background-color .3s ease,border-color .3s ease}
+.mtab{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;flex:1 1 0;min-width:0;padding:8px 2px 7px;color:var(--text-muted-col);background:transparent;border:none;cursor:pointer;border-radius:14px;position:relative;transition:color .2s ease,transform .15s ease;font-family:inherit}
+.mtab span{font-size:10px;font-weight:700;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtab.active{color:var(--text-sec)}
+.mtab.active::after{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:28px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(135deg,#0F4C81,#2D7DD2)}
+.mtab:active{transform:scale(.93)}
+/* hide power-user toggles (currency/unit) on phones — defaults THB/kWh */
+@media(max-width:1023px){.lg-only{display:none!important}}
+/* ═══ BILL ANALYZER ═══ */
+.ba-drop{border:2px dashed #CCE1FF;border-radius:18px;padding:24px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.ba-drop:hover,.ba-drop.drag{border-color:#2D7DD2;background:rgba(45,125,210,.05)}
+[data-theme="dark"] .ba-drop{border-color:var(--border-col)}
+[data-theme="dark"] .ba-drop:hover,[data-theme="dark"] .ba-drop.drag{border-color:#2D7DD2;background:rgba(45,125,210,.10)}
+.ba-field-lbl{font-size:12px;font-weight:700;color:#0F4C81;margin-bottom:5px;display:block}
+[data-theme="dark"] .ba-field-lbl{color:var(--text-sec)}
+.ba-input{width:100%;background:var(--input-bg);border:1.5px solid #CCE1FF;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600;color:#0A2540;transition:border-color .2s;font-family:inherit}
+.ba-input:focus{border-color:#0F4C81;outline:none}
+[data-theme="dark"] .ba-input{border-color:var(--border-col);color:var(--text-pri)}
+.ba-verdict{border-radius:16px;padding:15px 16px;display:flex;align-items:flex-start;gap:11px}
+.ba-cause-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border-light-col)}
+.ba-cause-ic{width:34px;height:34px;border-radius:10px;background:var(--surface-3);color:#2D7DD2;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ba-pct{margin-left:auto;font-weight:800;color:#0F4C81;font-size:13px;flex-shrink:0}
+[data-theme="dark"] .ba-pct{color:var(--text-sec)}
+.ba-result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 20px;color:var(--text-muted-col)}
+.ba-thumb{max-height:110px;border-radius:12px;border:1px solid var(--border-col)}
+.ba-eyebrow{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#0F4C81}
+[data-theme="dark"] .ba-eyebrow{color:var(--text-sec)}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-[#f0f6ff] via-white to-[#e8f0ff]">
+
+<!-- ═══ TOP NAVBAR ═══ -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-navy-100 shadow-sm">
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
+
+    <!-- Logo -->
+    <button id="logoBtn" class="flex items-center gap-2.5 flex-shrink-0 group">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+        <i data-lucide="zap" class="icon-sm text-white"></i>
+      </div>
+      <span class="text-navy-950 font-black text-[15px] tracking-tight hidden sm:block" data-i="brandName">Anutung Electric</span>
+    </button>
+
+    <!-- Nav links — hidden on mobile, shown after entering app -->
+    <nav id="mainNav" class="hidden lg:flex items-center gap-1 flex-1 justify-center" aria-label="Main navigation">
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="dashboard" data-i="navDashboard">Dashboard</a>
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="billanalyzer" data-i="navAnalyzer">Bill Analyzer</a>
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="appliances" data-i="navAppliances">Appliances</a>
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="billsim" data-i="navBillSim">Bill Simulator</a>
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="smartvolt" data-i="navSmartVolt">SmartVolt</a>
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="community" data-i="navCommunity">Community</a>
+    </nav>
+
+    <!-- Right: Toggles + Ecobot button -->
+    <div class="flex items-center gap-2 ml-auto flex-shrink-0 flex-wrap justify-end">
+      <!-- Language toggle -->
+      <div class="seg" id="segLang" data-group="lang">
+        <div class="seg-pill"></div>
+        <button class="seg-btn" data-val="en">EN</button>
+        <button class="seg-btn" data-val="th">ไทย</button>
+      </div>
+      <!-- Currency toggle -->
+      <div class="seg lg-only" id="segCurrency" data-group="currency">
+        <div class="seg-pill"></div>
+        <button class="seg-btn" data-val="THB">฿</button>
+        <button class="seg-btn" data-val="USD">$</button>
+        <button class="seg-btn" data-val="EUR">€</button>
+      </div>
+      <!-- Unit toggle -->
+      <div class="seg lg-only" id="segUnit" data-group="unit">
+        <div class="seg-pill"></div>
+        <button class="seg-btn" data-val="kWh">kWh</button>
+        <button class="seg-btn" data-val="Wh">Wh</button>
+        <button class="seg-btn" data-val="BTU">BTU</button>
+      </div>
+      <!-- Theme toggle -->
+      <button id="themeToggle" class="w-9 h-9 rounded-xl bg-navy-50 border border-navy-200 text-navy-500 flex items-center justify-center hover:bg-navy-100 hover:scale-105 transition-all duration-200" title="Toggle dark/light mode">
+        <i data-lucide="moon" class="icon-sm" id="themeIcon"></i>
+      </button>
+      <!-- Ecobot toggle -->
+      <button id="ecobotToggle" class="w-9 h-9 rounded-xl bg-gradient-to-br from-navy-500 to-navy-400 text-white flex items-center justify-center shadow hover:shadow-md hover:scale-105 transition-all duration-200" title="Open Ecobot">
+        <i data-lucide="bot" class="icon-sm"></i>
+      </button>
+      <!-- Dashboard quick-enter (hero only) -->
+      <button id="enterAppBtn" class="hidden bg-gradient-to-r from-navy-500 to-navy-400 text-white text-[12.5px] font-700 px-4 py-2 rounded-xl shadow hover:shadow-md hover:scale-105 transition-all duration-200" data-i="heroCta">Get Started Free</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main id="appMain" class="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 pb-24 lg:pb-8">
+
+  <!-- HERO SECTION (Landing) -->
+  <section id="sec-hero" class="section py-6">
+
+    <!-- Hero: 2-column (text + 3D) -->
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pt-6 pb-2">
+      <!-- Text -->
+      <div class="text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 bg-navy-50 border border-navy-100 text-navy-500 text-xs font-700 px-4 py-2 rounded-full mb-6 animate-fade-up">
+          <i data-lucide="sparkles" class="icon-xs"></i>
+          <span data-i="heroBadge">AI-Powered Energy Intelligence for Thai Homes</span>
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-900 text-navy-950 leading-tight mb-5 animate-fade-up [animation-delay:80ms]">
+          <span data-i="heroTitle">Take Control of Your</span><br>
+          <span class="grad-text" data-i="heroTitleAccent">Electricity Bill</span>
+        </h1>
+        <p class="text-navy-500 text-lg max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed animate-fade-up [animation-delay:160ms]" data-i="heroSub">Track every watt, simulate your Thai electricity bill with real MEA/PEA tariffs, and unlock AI-powered savings strategies tailored to your lifestyle.</p>
+        <div class="flex flex-wrap gap-3 justify-center lg:justify-start animate-fade-up [animation-delay:240ms]">
+          <button id="heroStartBtn" class="flex items-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm px-7 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <i data-lucide="zap" class="icon-sm"></i><span data-i="heroStartBtn">Start Saving Free</span>
+          </button>
+          <button id="heroSimBtn" class="flex items-center gap-2 border-2 border-navy-200 text-navy-500 font-700 text-sm px-7 py-3.5 rounded-2xl hover:bg-navy-50 hover:border-navy-300 transition-all duration-300">
+            <i data-lucide="calculator" class="icon-sm"></i><span data-i="heroSimBtn">Try Bill Simulator</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 justify-center lg:justify-start mt-6 text-navy-400 text-xs font-600 animate-fade-up [animation-delay:320ms]">
+          <i data-lucide="badge-check" class="icon-xs"></i>
+          <span data-i="landTrust">Trusted by 50,000+ Thai households</span>
+        </div>
+      </div>
+      <!-- Spline 3D scene -->
+      <div class="land-3d h-[340px] sm:h-[430px] animate-pop-in [animation-delay:200ms]">
+        <div class="land-3d-spot"></div>
+        <div class="absolute top-4 left-4 z-10 inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/90 text-[11px] font-700 px-3 py-1.5 rounded-full backdrop-blur-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse-glow"></span>
+          <span data-i="land3dTitle">SmartVolt · Energy brought to life</span>
+        </div>
+        <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"></spline-viewer>
+      </div>
+    </div>
+
+    <!-- Stats band -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-12 animate-fade-up">
+      <div class="stat-card text-center"><p class="text-3xl sm:text-4xl font-900 grad-text">30%</p><p class="text-navy-500 text-xs font-600 mt-1" data-i="landStatSaveLabel">Avg. bill reduction</p></div>
+      <div class="stat-card text-center"><p class="text-3xl sm:text-4xl font-900 grad-text">50K+</p><p class="text-navy-500 text-xs font-600 mt-1" data-i="landStatHomesLabel">Households trust us</p></div>
+      <div class="stat-card text-center"><p class="text-3xl sm:text-4xl font-900 grad-text">24/7</p><p class="text-navy-500 text-xs font-600 mt-1" data-i="landStatMonitorLabel">Real-time monitoring</p></div>
+      <div class="stat-card text-center"><p class="text-3xl sm:text-4xl font-900 grad-text" data-i="landStatSolarVal">3 yrs</p><p class="text-navy-500 text-xs font-600 mt-1" data-i="landStatSolarLabel">Solar payback</p></div>
+    </div>
+
+    <!-- Quick savings card (interactive) -->
+    <div class="flex justify-center mt-14">
+      <div class="w-full max-w-md bg-white rounded-3xl p-6 shadow-xl border border-navy-100 animate-pop-in text-left">
+        <div class="flex items-center gap-2 text-navy-500 text-sm font-700 mb-4">
+          <i data-lucide="trending-down" class="icon-sm"></i>
+          <span data-i="quickEstTitle">Quick Savings Estimate</span>
+        </div>
+        <label class="text-navy-500 text-xs font-600 block mb-1" data-i="heroSliderLabel">Your monthly electricity bill (฿)</label>
+        <input type="range" id="heroSlider" min="500" max="15000" step="100" value="3000" class="w-full mb-3"/>
+        <div class="flex justify-between text-xs text-navy-300 font-600 mb-5">
+          <span>฿500</span><span id="heroSliderVal" class="text-navy-950 font-800 text-base">฿3,000</span><span>฿15,000</span>
+        </div>
+        <div class="bg-gradient-to-r from-navy-500 to-navy-400 rounded-2xl p-4 text-white text-center">
+          <p class="text-xs font-600 opacity-75 mb-1" data-i="heroSaveLabel">You could save up to</p>
+          <p class="text-3xl font-900" id="heroSaveAmt">฿450</p>
+          <p class="text-xs opacity-75 mt-0.5" data-i="perMonth">per month</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="text-center max-w-2xl mx-auto mt-24">
+      <span class="text-navy-400 text-xs font-800 tracking-[0.18em] uppercase" data-i="landFeatKicker">FEATURES</span>
+      <h2 class="text-3xl sm:text-4xl font-900 text-navy-950 mt-2" data-i="landFeatTitle">Everything your home needs, in one place</h2>
+      <p class="text-navy-500 mt-3" data-i="landFeatSub">A complete toolkit designed to put you in full control of your energy.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
+      <div class="land-feat" data-nav-sec="dashboard">
+        <div class="land-feat-icon"><i data-lucide="layout-dashboard" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="featDash">Live Dashboard</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatDashDesc">See your monthly bill, usage, and savings at a glance with clear, real-time charts.</p>
+      </div>
+      <div class="land-feat" data-nav-sec="appliances">
+        <div class="land-feat-icon"><i data-lucide="plug" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="featAp">Appliances Tracker</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatApDesc">Log every device to calculate its real cost and spot the energy hogs in your home.</p>
+      </div>
+      <div class="land-feat" data-nav-sec="billsim">
+        <div class="land-feat-icon"><i data-lucide="receipt" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="featBill">Bill Simulator</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatBillDesc">Calculate your bill with Thailand's real progressive MEA/PEA tariffs and Ft charges.</p>
+      </div>
+      <div class="land-feat" data-nav-sec="smartvolt">
+        <div class="land-feat-icon"><i data-lucide="brain" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="featSV">SmartVolt AI</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatSVDesc">Get personalised saving strategies based on your lifestyle and household habits.</p>
+      </div>
+      <div class="land-feat" data-nav-sec="community">
+        <div class="land-feat-icon"><i data-lucide="users" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="featComm">Community Tips</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatCommDesc">Share and discover real money-saving tricks — anonymous, no account needed.</p>
+      </div>
+      <div class="land-feat" data-nav-sec="dashboard">
+        <div class="land-feat-icon"><i data-lucide="line-chart" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="landFeatForecast">Bill Forecast</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatForecastDesc">Predict next month's bill ahead of time so you can plan your budget with confidence.</p>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="text-center max-w-2xl mx-auto mt-24">
+      <span class="text-navy-400 text-xs font-800 tracking-[0.18em] uppercase" data-i="landHowKicker">HOW IT WORKS</span>
+      <h2 class="text-3xl sm:text-4xl font-900 text-navy-950 mt-2" data-i="landHowTitle">Start saving in 3 simple steps</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8 mt-12">
+      <div>
+        <div class="land-step-num">01</div>
+        <h3 class="text-navy-950 font-800 text-xl mt-5" data-i="landStep1Title">Add your appliances</h3>
+        <p class="text-navy-500 mt-2 leading-relaxed" data-i="landStep1Desc">Log the devices in your home in minutes — no meter rewiring required.</p>
+      </div>
+      <div>
+        <div class="land-step-num">02</div>
+        <h3 class="text-navy-950 font-800 text-xl mt-5" data-i="landStep2Title">Let AI learn your home</h3>
+        <p class="text-navy-500 mt-2 leading-relaxed" data-i="landStep2Desc">SmartVolt analyses your usage and lifestyle to truly understand your home.</p>
+      </div>
+      <div>
+        <div class="land-step-num">03</div>
+        <h3 class="text-navy-950 font-800 text-xl mt-5" data-i="landStep3Title">Save automatically</h3>
+        <p class="text-navy-500 mt-2 leading-relaxed" data-i="landStep3Desc">Get tailored advice and smart routines that cut your bill every single day.</p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 to-navy-500 px-6 py-14 sm:px-12 text-center text-white mt-24">
+      <div class="absolute -bottom-16 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-navy-400/30 blur-3xl pointer-events-none"></div>
+      <div class="relative">
+        <h2 class="text-3xl sm:text-4xl font-900" data-i="landCtaTitle">Ready to cut your electricity bill?</h2>
+        <p class="opacity-80 max-w-lg mx-auto mt-3" data-i="landCtaSub">Start free today — no credit card needed. See results from your very first bill.</p>
+        <button id="landCtaBtn" class="inline-flex items-center gap-2 bg-white text-navy-950 font-800 text-sm px-8 py-3.5 rounded-2xl mt-7 shadow-lg hover:scale-105 transition-transform duration-300">
+          <i data-lucide="zap" class="icon-sm"></i><span data-i="heroCta">Get Started Free</span>
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- DASHBOARD SECTION -->
+  <section id="sec-dashboard" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="flex items-start justify-between mb-8 flex-wrap gap-3">
+        <div><h1 class="text-3xl font-900 text-navy-950 mb-1" id="dashWelcomeTxt"></h1><p class="text-navy-400 text-sm" data-i="dashSub"></p></div>
+        <button onclick="navigateTo('smartvolt')" class="flex items-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white text-sm font-700 px-5 py-2.5 rounded-xl shadow hover:shadow-md hover:scale-105 transition-all duration-200">
+          <i data-lucide="brain" class="icon-sm"></i><span data-i="navSmartVolt">SmartVolt</span>
+        </button>
+      </div>
+      <button onclick="navigateTo('billanalyzer')" class="w-full text-left bg-gradient-to-r from-navy-950 to-navy-500 rounded-2xl p-5 mb-8 flex items-center gap-4 text-white shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300">
+        <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i data-lucide="scan-line" class="icon-md text-white"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-800 text-base" data-i="dashAnalyzerCardTitle"></p>
+          <p class="text-white/75 text-xs mt-0.5" data-i="dashAnalyzerCardSub"></p>
+        </div>
+        <i data-lucide="arrow-right" class="icon-sm text-white/80 flex-shrink-0"></i>
+      </button>
+      <div id="dashCards" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
+      <div class="grid lg:grid-cols-3 gap-6 mb-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-5"><i data-lucide="trending-up" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="dashTrendTitle"></h3></div>
+          <div style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm flex flex-col">
+          <div class="flex items-center gap-2 mb-4"><i data-lucide="gauge" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="dashRiskTitle"></h3></div>
+          <div class="flex-1 flex flex-col items-center justify-center">
+            <div style="position:relative;height:140px;width:100%"><canvas id="riskChart"></canvas></div>
+            <p id="riskLabel" class="font-800 text-sm mt-1"></p><p id="riskSub" class="text-navy-300 text-xs mt-0.5"></p>
+          </div>
+        </div>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-5"><i data-lucide="pie-chart" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="dashBreakdownTitle"></h3></div>
+          <p id="dashBreakEmpty" class="hidden text-navy-300 text-sm text-center py-10" data-i="dashNoData"></p>
+          <div id="dashBreakChartWrap" style="position:relative;height:220px"><canvas id="breakChart"></canvas></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm flex flex-col">
+          <div class="flex items-center gap-2 mb-5"><i data-lucide="calendar-range" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="dashForecastTitle"></h3></div>
+          <div id="dashForecastContent" class="flex-1"></div>
+          <a href="#" onclick="navigateTo('smartvolt');return false;" class="mt-4 text-navy-400 text-xs font-700 hover:text-navy-500 flex items-center gap-1">
+            <span data-i="dashForecastCta"></span><i data-lucide="arrow-right" class="icon-xs"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BILL ANALYZER SECTION -->
+  <section id="sec-billanalyzer" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="mb-8">
+        <h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="baTitle"></h1>
+        <p class="text-navy-400 text-sm" data-i="baSub"></p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- LEFT: upload + form -->
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-4"><i data-lucide="upload" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="baUploadTitle"></h3></div>
+          <div id="baDrop" class="ba-drop">
+            <i data-lucide="image" class="icon-lg text-navy-300 mx-auto mb-2"></i>
+            <p class="text-navy-500 text-sm font-700" data-i="baDropTitle"></p>
+            <p class="text-navy-300 text-xs mt-1" data-i="baDropHint"></p>
+            <input type="file" id="baFile" accept="image/*,application/pdf" class="hidden"/>
+          </div>
+          <div id="baPreview" class="hidden mt-3 flex items-center gap-3">
+            <img id="baThumb" class="ba-thumb hidden" alt=""/>
+            <div id="baFileChip" class="hidden flex items-center gap-2 text-navy-500 text-xs font-700 bg-navy-50 px-3 py-2 rounded-xl"><i data-lucide="file-text" class="icon-sm"></i><span id="baFileName"></span></div>
+            <button id="baClearFile" class="text-navy-300 hover:text-red-500 transition-colors" aria-label="Remove file"><i data-lucide="x" class="icon-sm"></i></button>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4 mt-5">
+            <div><label class="ba-field-lbl" data-i="baKwhLbl"></label><input type="number" id="baKwh" class="ba-input" placeholder="420"/></div>
+            <div><label class="ba-field-lbl" data-i="baAmountLbl"></label><input type="number" id="baAmount" class="ba-input" placeholder="2292"/></div>
+            <div><label class="ba-field-lbl" data-i="baMonthLbl"></label><select id="baMonth" class="ba-input"></select></div>
+            <div><label class="ba-field-lbl" data-i="baPrevLbl"></label><input type="number" id="baPrev" class="ba-input" placeholder="—"/></div>
+          </div>
+          <button id="baAnalyzeBtn" class="w-full mt-5 flex items-center justify-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+            <i data-lucide="sparkles" class="icon-sm"></i><span data-i="baAnalyzeBtn"></span>
+          </button>
+          <p id="baError" class="hidden text-red-500 text-xs font-700 mt-2 text-center"></p>
+        </div>
+        <!-- RIGHT: results -->
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-4"><i data-lucide="bot" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="baResultTitle"></h3></div>
+          <div id="baResult">
+            <div class="ba-result-empty">
+              <i data-lucide="scan-line" class="icon-lg mb-3"></i>
+              <p class="text-sm font-600" data-i="baResultEmpty"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPLIANCES SECTION -->
+  <section id="sec-appliances" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="flex items-start justify-between mb-8 flex-wrap gap-3">
+        <div><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="apTitle"></h1><p class="text-navy-400 text-sm" data-i="apSub"></p></div>
+        <button onclick="openApModal(null)" class="flex items-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white text-sm font-700 px-5 py-2.5 rounded-xl shadow hover:shadow-md hover:scale-105 transition-all duration-200">
+          <i data-lucide="plus" class="icon-sm"></i><span data-i="apAddBtn">Add Appliance</span>
+        </button>
+      </div>
+      <div id="apCatFilter" class="flex flex-wrap gap-2 mb-6"></div>
+      <div class="bg-gradient-to-r from-navy-950 to-navy-500 rounded-2xl p-5 flex items-center justify-between mb-6 text-white shadow-lg">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center"><i data-lucide="receipt" class="icon-md text-white"></i></div>
+          <div><p class="text-xs font-600 text-white/70" data-i="apTotalLbl"></p><p id="apTotalBill" class="text-2xl font-900"></p></div>
+        </div>
+        <div class="text-right"><p class="text-xs text-white/70" data-i="dashUsage"></p><p id="apTotalKwh" class="text-lg font-800"></p></div>
+      </div>
+      <div id="apList" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+      <div id="apEmpty" class="hidden text-center py-20">
+        <div class="w-20 h-20 rounded-3xl bg-navy-50 flex items-center justify-center mx-auto mb-4"><i data-lucide="plug" class="icon-lg text-navy-300"></i></div>
+        <p class="text-navy-950 font-800 text-lg mb-1" data-i="apEmptyTitle"></p>
+        <p class="text-navy-400 text-sm" data-i="apEmptyDesc"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BILL SIMULATOR SECTION -->
+  <section id="sec-billsim" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="mb-8"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="bsTitle"></h1><p class="text-navy-400 text-sm" data-i="bsSub"></p></div>
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+            <h3 class="text-navy-950 font-800 text-base mb-5 flex items-center gap-2"><i data-lucide="sliders-horizontal" class="icon-sm text-navy-500"></i><span data-i="bsFormTitle"></span></h3>
+            <label class="block text-navy-600 text-xs font-700 mb-1.5" data-i="bsUsageLabel"></label>
+            <div class="flex items-center gap-3 mb-3">
+              <input type="number" id="bsKwh" min="0" max="5000" step="10" value="300" class="flex-1 border border-navy-200 rounded-xl px-4 py-3 text-navy-950 font-800 text-lg bg-navy-50 focus:border-navy-500 transition-colors"/>
+              <span class="text-navy-400 text-sm font-600">kWh</span>
+            </div>
+            <input type="range" id="bsKwhSlider" min="0" max="2000" step="10" value="300" class="w-full mb-5"/>
+            <label class="block text-navy-600 text-xs font-700 mb-1.5" data-i="bsCategoryLabel"></label>
+            <div class="border border-navy-200 rounded-xl px-4 py-3 bg-navy-50 text-navy-950 font-600 text-sm mb-5" data-i="bsCatResidential"></div>
+            <button onclick="calcBillSim()" class="w-full bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 py-3.5 rounded-xl hover:shadow-lg hover:scale-[1.01] transition-all duration-200 flex items-center justify-center gap-2">
+              <i data-lucide="calculator" class="icon-sm"></i><span data-i="bsCalcBtn"></span>
+            </button>
+          </div>
+          <div id="bsResultCard" class="bg-gradient-to-br from-navy-950 to-navy-500 rounded-2xl p-6 text-white shadow-xl hidden">
+            <p class="text-xs font-600 text-white/70 mb-2" data-i="bsTotalLbl"></p>
+            <p id="bsTotalAmt" class="text-5xl font-900 mb-5"></p>
+            <div id="bsBreakdown" class="space-y-2.5"></div>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <div id="bsTierCard" class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm hidden">
+            <h3 class="text-navy-950 font-800 text-base mb-4 flex items-center gap-2"><i data-lucide="layers" class="icon-sm text-navy-500"></i><span data-i="bsTierTitle"></span></h3>
+            <div id="bsTierTable"></div>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+            <h3 class="text-navy-950 font-800 text-base mb-1 flex items-center gap-2"><i data-lucide="settings-2" class="icon-sm text-navy-500"></i><span data-i="bsConfigTitle"></span></h3>
+            <p class="text-navy-400 text-xs mb-5" data-i="bsConfigSub"></p>
+            <div class="space-y-4" id="bsConfigFields"></div>
+            <div class="flex gap-3 mt-5">
+              <button onclick="resetTariff()" class="flex-1 border-2 border-navy-200 text-navy-500 font-700 text-sm py-2.5 rounded-xl hover:bg-navy-50 transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="rotate-ccw" class="icon-xs"></i><span data-i="bsReset"></span>
+              </button>
+              <button onclick="saveTariffConfig()" class="flex-1 bg-navy-500 text-white font-700 text-sm py-2.5 rounded-xl hover:bg-navy-600 transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="save" class="icon-xs"></i><span>Save</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SMARTVOLT SECTION -->
+  <section id="sec-smartvolt" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="mb-8"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="svTitle"></h1><p class="text-navy-400 text-sm" data-i="svSub"></p></div>
+      <div id="svLifestyle" class="mb-6"></div>
+      <div id="svChooser">
+        <div class="max-w-2xl mx-auto text-center mb-8">
+          <h2 class="text-xl font-800 text-navy-950 mb-1" data-i="svChooseTitle"></h2>
+          <p class="text-navy-400 text-sm" data-i="svChooseSub"></p>
+        </div>
+        <div id="svProfileGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto"></div>
+      </div>
+      <div id="svStrategy" class="hidden">
+        <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+          <div class="flex items-center gap-3">
+            <div id="svProfileBadge" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center shadow-md">
+              <i data-lucide="user" id="svProfileIcon" class="icon-md text-white"></i>
+            </div>
+            <div><p class="text-xs text-navy-400 font-600" data-i="svStrategyFor"></p><p id="svProfileName" class="text-lg font-900 text-navy-950"></p></div>
+          </div>
+          <button onclick="resetSvProfile()" class="flex items-center gap-1.5 text-navy-400 text-sm font-700 border border-navy-200 px-4 py-2 rounded-xl hover:bg-navy-50 transition-colors">
+            <i data-lucide="arrow-left" class="icon-xs"></i><span data-i="svChangeProfile"></span>
+          </button>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm mb-6">
+          <label class="flex items-center justify-between mb-3">
+            <span class="text-navy-600 text-sm font-700" data-i="svUsageLabel"></span>
+            <span id="svUsageVal" class="text-navy-950 font-900 text-lg"></span>
+          </label>
+          <input type="range" id="svSlider" min="50" max="1500" step="10" value="300" class="w-full"/>
+          <div class="flex justify-between text-xs text-navy-300 font-600 mt-1">
+            <span id="svSliderMinLbl"></span><span id="svSliderMaxLbl"></span>
+          </div>
+        </div>
+        <div id="svMetrics" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
+        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+            <h3 class="text-navy-950 font-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="bar-chart-2" class="icon-sm text-navy-500"></i><span data-i="svBillComp"></span></h3>
+            <div style="position:relative;height:220px"><canvas id="svBarChart"></canvas></div>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+            <h3 class="text-navy-950 font-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="pie-chart" class="icon-sm text-navy-500"></i><span data-i="svBreakdown"></span></h3>
+            <div style="position:relative;height:220px"><canvas id="svDonutChart"></canvas></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-navy-100 shadow-sm overflow-hidden mb-8">
+          <div class="p-6 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center shadow-md flex-shrink-0"><i data-lucide="sparkles" class="icon-md text-white"></i></div>
+              <div><h3 class="text-navy-950 font-800 text-base" data-i="svAiAnalyzeTitle"></h3><p class="text-navy-400 text-xs mt-0.5" data-i="svAiAnalyzeSub"></p></div>
+            </div>
+            <button id="svAiBtn" class="flex items-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm px-5 py-2.5 rounded-xl shadow hover:shadow-md hover:scale-105 transition-all duration-200 flex-shrink-0">
+              <i data-lucide="wand-2" class="icon-sm"></i><span data-i="svAiAnalyzeBtn"></span>
+            </button>
+          </div>
+          <div id="svAiResult" class="px-6 pb-6 hidden"></div>
+        </div>
+        <div class="bg-white rounded-2xl border border-navy-100 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-navy-100">
+            <h3 class="text-navy-950 font-800 text-base" data-i="svAIHeader"></h3>
+            <p class="text-navy-400 text-xs mt-0.5" data-i="svAIHeaderSub"></p>
+          </div>
+          <div id="svTabBar" class="flex border-b border-navy-100 overflow-x-auto"></div>
+          <div id="svTabContent" class="p-6"></div>
+        </div>
+        <p class="text-navy-300 text-xs text-center mt-4" data-i="svFooterNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMUNITY SECTION -->
+  <section id="sec-community" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="mb-8"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="commTitle"></h1><p class="text-navy-400 text-sm" data-i="commSub"></p></div>
+      <div class="grid lg:grid-cols-3 gap-8">
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
+            <p class="text-navy-400 text-xs font-700 mb-3 flex items-center gap-1.5"><i data-lucide="shield" class="icon-xs"></i><span data-i="commHandle"></span></p>
+            <div class="flex items-center gap-3">
+              <div id="commAvatar" class="w-11 h-11 rounded-xl flex items-center justify-center text-white font-900 text-base flex-shrink-0"></div>
+              <div class="min-w-0"><p id="commHandleTxt" class="text-navy-950 font-800 text-sm truncate"></p><p class="text-navy-300 text-xs" data-i="commHandleSub"></p></div>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
+            <h3 class="text-navy-950 font-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="edit-3" class="icon-sm text-navy-500"></i><span data-i="commShareTitle"></span></h3>
+            <textarea id="commInput" rows="4" data-i-ph="commPlaceholder" class="w-full border border-navy-200 rounded-xl px-4 py-3 text-navy-950 text-sm placeholder:text-navy-300 focus:border-navy-500 transition-colors resize-none bg-navy-50 font-500"></textarea>
+            <button onclick="postCommunity()" class="w-full mt-3 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 text-sm py-3 rounded-xl hover:shadow-md hover:scale-[1.01] transition-all duration-200 flex items-center justify-center gap-2">
+              <i data-lucide="send" class="icon-sm"></i><span data-i="commPostBtn"></span>
+            </button>
+          </div>
+        </div>
+        <div class="lg:col-span-2"><div id="commList" class="space-y-4"></div></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══ ECOBOT FLOATING PANEL ═══ -->
+<!-- Mobile bottom tab bar (in-app, phones only) -->
+<nav id="mobileTabBar" class="lg:hidden hidden fixed bottom-0 left-0 right-0 z-40 mtab-bar flex items-stretch px-1.5 pt-1" aria-label="Mobile navigation">
+  <button class="mtab" data-sec="dashboard"><i data-lucide="gauge" class="icon-md"></i><span data-i="tabDashboard">Dashboard</span></button>
+  <button class="mtab" data-sec="appliances"><i data-lucide="plug" class="icon-md"></i><span data-i="tabAppliances">Devices</span></button>
+  <button class="mtab" data-sec="billsim"><i data-lucide="calculator" class="icon-md"></i><span data-i="tabBillSim">Simulator</span></button>
+  <button class="mtab" data-sec="smartvolt"><i data-lucide="brain" class="icon-md"></i><span data-i="tabSmartVolt">SmartVolt</span></button>
+  <button class="mtab" data-sec="community"><i data-lucide="users" class="icon-md"></i><span data-i="tabCommunity">Community</span></button>
+</nav>
+
+<div id="ecobotFab" class="fixed bottom-24 right-5 lg:bottom-6 lg:right-6 z-40 hidden">
+  <button id="ecobotOpen" class="w-14 h-14 rounded-full bg-gradient-to-br from-navy-500 to-navy-400 text-white flex items-center justify-center shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 animate-pulse-glow relative">
+    <i data-lucide="bot" class="icon-lg"></i>
+    <span id="ecobotBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-800 flex items-center justify-center">1</span>
+  </button>
+</div>
+
+<div id="ecobotPanel" class="fixed top-16 right-0 bottom-0 w-[380px] bg-white shadow-2xl border-l border-navy-100 flex flex-col z-40 closed" style="max-width:100vw">
+  <!-- Ecobot header -->
+  <div class="flex-shrink-0 bg-gradient-to-r from-navy-950 to-navy-500 text-white p-4 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+      <i data-lucide="bot" class="icon-sm text-white"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="font-800 text-sm">Ecobot</p>
+      <p class="text-[11px] text-white/70 font-500" data-i="ecobotSubtitle">AI Energy Advisor</p>
+    </div>
+    <button id="ecobotClose" class="w-7 h-7 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors">
+      <i data-lucide="x" class="icon-xs text-white"></i>
+    </button>
+  </div>
+  <!-- Chat log -->
+  <div id="ecobotLog" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth"></div>
+  <!-- Quick replies -->
+  <div id="ecobotQuickReplies" class="flex-shrink-0 px-4 pb-2 flex flex-wrap gap-1.5"></div>
+  <!-- Input -->
+  <div class="flex-shrink-0 p-3 border-t border-navy-100 flex gap-2">
+    <input type="text" id="ecobotInput" placeholder="" data-i-ph="ecobotPlaceholder" class="flex-1 bg-navy-50 border border-navy-200 rounded-xl px-3 py-2.5 text-sm text-navy-950 placeholder:text-navy-300 font-500 focus:border-navy-500 transition-colors"/>
+    <button id="ecobotSend" class="w-10 h-10 rounded-xl bg-gradient-to-br from-navy-500 to-navy-400 text-white flex items-center justify-center flex-shrink-0 hover:shadow-md hover:scale-105 transition-all duration-200">
+      <i data-lucide="send" class="icon-xs text-white"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ MODAL OVERLAY (Appliance Form) ═══ -->
+<div id="modalOverlay" class="fixed inset-0 bg-navy-950/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div id="modalBox" class="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl animate-pop-in">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-navy-950 text-white text-sm font-600 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 translate-y-24 opacity-0 pointer-events-none">
+  <i data-lucide="check-circle" id="toastIcon" class="icon-sm text-emerald-400"></i>
+  <span id="toastTxt"></span>
+</div>
+
+<style>
+.feat-pill{display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid #CCE1FF;color:#0F4C81;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 4px rgba(15,76,129,.08)}
+.feat-pill:hover{background:#E6F0FF;border-color:#0F4C81;transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,76,129,.18)}
+.nav-link.active{background:#E6F0FF;color:#0F4C81;font-weight:700}
+.tab-btn{padding:10px 20px;border-radius:12px 12px 0 0;background:transparent;border:none;cursor:pointer;font-family:inherit;text-align:left;transition:all .3s cubic-bezier(.22,1.1,.36,1);flex:1;min-width:130px}
+.tab-btn:hover{background:#E6F0FF}
+.tab-btn.active{background:linear-gradient(135deg,#0F4C81,#2D7DD2);color:#fff}
+.tab-btn .tab-name{font-size:13.5px;font-weight:800}
+.tab-btn .tab-tag{font-size:11px;opacity:.8;margin-top:2px}
+.chart-wrap{position:relative;height:260px}
+.chart-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+.stat-card{background:white;border-radius:18px;padding:18px 20px;border:1.5px solid #E6F0FF;box-shadow:0 1px 4px rgba(15,76,129,.06),0 4px 16px rgba(15,76,129,.06)}
+.stat-card.blue-grad{background:linear-gradient(135deg,#0A2540,#0F4C81);border:none;color:white}
+/* ═══ LANDING ═══ */
+.land-3d{position:relative;border-radius:24px;overflow:hidden;background:radial-gradient(120% 120% at 70% 20%,#0F4C81 0%,#0A2540 55%,#031428 100%);box-shadow:0 24px 60px -20px rgba(10,37,64,.55)}
+.land-3d spline-viewer{width:100%;height:100%;display:block}
+.land-3d .land-3d-spot{position:absolute;top:-30%;left:0;width:80%;height:120%;background:radial-gradient(closest-side,rgba(45,125,210,.35),transparent);filter:blur(40px);pointer-events:none}
+.land-feat{background:white;border:1.5px solid #E6F0FF;border-radius:20px;padding:22px;cursor:pointer;transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s ease,border-color .25s ease}
+.land-feat:hover{transform:translateY(-5px);border-color:#99C3FF;box-shadow:0 16px 40px -16px rgba(15,76,129,.35)}
+.land-feat-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#E6F0FF;color:#0F4C81;transition:background .3s ease,color .3s ease}
+.land-feat:hover .land-feat-icon{background:linear-gradient(135deg,#0F4C81,#2D7DD2);color:#fff}
+.land-step-num{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:#E6F0FF;color:#0F4C81;font-weight:800;font-size:15px}
+.land-grid-bg{background-image:radial-gradient(rgba(15,76,129,.10) 1px,transparent 1px);background-size:26px 26px}
+[data-theme="dark"] .land-feat{background:var(--surface)!important;border-color:var(--border-col)!important}
+[data-theme="dark"] .land-feat-icon{background:var(--surface-3)!important;color:var(--text-sec)!important}
+[data-theme="dark"] .land-step-num{background:var(--surface-3)!important;color:var(--text-sec)!important}
+[data-theme="dark"] .land-grid-bg{background-image:radial-gradient(rgba(138,174,212,.08) 1px,transparent 1px)}
+</style>
+
+<script>
+/* =======================================================
+   ANUTUNG ELECTRIC — Complete Application Logic v3
+   ======================================================= */
+
+// ── Constants ──────────────────────────────────────────
+var FX = { THB:1, USD:1/36, EUR:1/39 };
+var SYM = { THB:'฿', USD:'$', EUR:'€' };
+var UNIT_FACTOR = { kWh:1, Wh:1000, BTU:3412.142 };
+var UNIT_LABEL_SHORT = { kWh:'kWh', Wh:'Wh', BTU:'BTU' };
+
+var CATS = ['ac','appliances','kitchen','heating','lighting','electronics'];
+var CAT_LABELS = { ac:{en:'Air Conditioning',th:'เครื่องปรับอากาศ'}, appliances:{en:'Appliances',th:'เครื่องใช้ไฟฟ้า'}, kitchen:{en:'Kitchen',th:'ห้องครัว'}, heating:{en:'Water Heating',th:'เครื่องทำน้ำอุ่น'}, lighting:{en:'Lighting',th:'ไฟส่องสว่าง'}, electronics:{en:'Electronics',th:'อิเล็กทรอนิกส์'} };
+var CAT_COLORS = ['#0F4C81','#2D7DD2','#66A5FF','#0C3E6B','#99C3FF','#CCE1FF'];
+
+var APPLIANCE_PRESETS = {
+  'Air Conditioner':{watts:1200,icon:'wind',cat:'ac'},
+  'Refrigerator':{watts:150,icon:'thermometer',cat:'kitchen'},
+  'Television':{watts:120,icon:'tv',cat:'electronics'},
+  'Washing Machine':{watts:500,icon:'shirt',cat:'appliances'},
+  'Water Heater':{watts:3500,icon:'flame',cat:'heating'},
+  'Light Bulbs':{watts:40,icon:'lightbulb',cat:'lighting'},
+  'Rice Cooker':{watts:700,icon:'utensils',cat:'kitchen'},
+  'Desktop PC':{watts:300,icon:'monitor',cat:'electronics'},
+  'Laptop':{watts:65,icon:'laptop',cat:'electronics'},
+  'Electric Fan':{watts:60,icon:'wind',cat:'appliances'},
+  'Microwave':{watts:1000,icon:'zap',cat:'kitchen'},
+  'Other':{watts:100,icon:'plug',cat:'appliances'}
+};
+
+var PROFILES = {
+  remote:{ icon:'laptop', name:{en:'Remote Worker',th:'คนทำงานที่บ้าน'}, desc:{en:'Home all day — AC, screens & peripherals running.',th:'อยู่บ้านทั้งวัน เปิดแอร์ จอ และอุปกรณ์ต่อพ่วง'}, defaultKwh:520, split:{ac:.35,appliances:.18,kitchen:.12,heating:.10,lighting:.08,electronics:.17} },
+  nightowl:{ icon:'moon', name:{en:'Night Owl',th:'คนนอนดึก'}, desc:{en:'Active after dark — entertainment & late-night cooling.',th:'ตื่นตอนกลางคืน ใช้บันเทิงและแอร์ดึก'}, defaultKwh:360, split:{ac:.32,appliances:.16,kitchen:.10,heating:.08,lighting:.14,electronics:.20} },
+  family:{ icon:'users', name:{en:'Large Family',th:'ครอบครัวใหญ่'}, desc:{en:'Multiple rooms, heavy appliance & laundry load.',th:'หลายห้อง เครื่องใช้ไฟฟ้าเยอะ ซักผ้าบ่อย'}, defaultKwh:720, split:{ac:.38,appliances:.24,kitchen:.14,heating:.12,lighting:.07,electronics:.05} },
+  student:{ icon:'graduation-cap', name:{en:'Minimalist Student',th:'นักศึกษาประหยัด'}, desc:{en:'Small space, laptop & essentials only.',th:'พื้นที่เล็ก ใช้โน้ตบุ๊กและของจำเป็น'}, defaultKwh:140, split:{ac:.20,appliances:.14,kitchen:.12,heating:.10,lighting:.10,electronics:.34} }
+};
+
+var PATHWAYS = {
+  quick:{ icon:'zap', name:{en:'Quick Wins',th:'เริ่มง่าย ได้ผลทันที'}, tag:{en:'Free · Habit changes',th:'ฟรี · ปรับพฤติกรรม'}, invest:{en:'฿0 (Free)',th:'ฟรี'}, maxPct:15, reduce:{ac:.06,appliances:.05,kitchen:.04,heating:.05,lighting:.10,electronics:.04}, items:[{en:'Set AC to 26°C instead of 22°C',th:'ตั้งแอร์เป็น 26°C แทน 22°C',pct:5},{en:'Unplug devices on standby',th:'ถอดปลั๊กอุปกรณ์ที่ไม่ใช้งาน',pct:3},{en:'Use natural light during daytime',th:'ใช้แสงธรรมชาติช่วงกลางวัน',pct:4},{en:'Reduce water heater usage',th:'ลดเวลาใช้เครื่องทำน้ำอุ่น',pct:3}] },
+  smart:{ icon:'cpu', name:{en:'Smart Tech',th:'เทคโนโลยีอัจฉริยะ'}, tag:{en:'Smart plugs · Automation',th:'ปลั๊กอัจฉริยะ · อัตโนมัติ'}, invest:{en:'฿5,000–15,000',th:'5,000–15,000 บาท'}, maxPct:26, reduce:{ac:.20,appliances:.10,kitchen:.06,heating:.10,lighting:.25,electronics:.10}, items:[{en:'Smart AC temperature controller',th:'ตัวควบคุมอุณหภูมิแอร์อัจฉริยะ',pct:12},{en:'Full LED lighting upgrade',th:'เปลี่ยนไฟทั้งบ้านเป็น LED',pct:8},{en:'Roof insulation to reduce AC load',th:'ฉนวนหลังคาเพื่อลดภาระแอร์',pct:6}] },
+  longterm:{ icon:'sun', name:{en:'Long-Term Investment',th:'การลงทุนระยะยาว'}, tag:{en:'Solar · Inverter upgrades',th:'โซลาร์ · อินเวอร์เตอร์'}, invest:{en:'฿80,000+',th:'80,000+ บาท'}, maxPct:45, reduce:{ac:.40,appliances:.15,kitchen:.20,heating:.55,lighting:.30,electronics:.15}, items:[{en:'Rooftop solar (3–5 kWp)',th:'โซลาร์บนหลังคา (3–5 kWp)',pct:20},{en:'Inverter-type air conditioner',th:'แอร์รุ่นอินเวอร์เตอร์',pct:15},{en:'Solar water heater',th:'เครื่องทำน้ำอุ่นพลังงานแสงอาทิตย์',pct:10}] }
+};
+
+// ── I18n Strings ───────────────────────────────────────
+var STRINGS = {
+en:{
+  brandName:'Anutung Electric', perMonth:'/month', perYear:'/year',
+  navDashboard:'Dashboard', navAppliances:'Appliances', navBillSim:'Bill Simulator', navSmartVolt:'SmartVolt', navCommunity:'Community',
+  tabDashboard:'Dashboard', tabAppliances:'Devices', tabBillSim:'Simulator', tabSmartVolt:'SmartVolt', tabCommunity:'Community',
+  navAnalyzer:'Bill Analyzer',
+  dashAnalyzerCardTitle:'Analyze your electricity bill with AI',
+  dashAnalyzerCardSub:'Upload your bill, see what is driving the cost, and get savings tips',
+  baTitle:'Bill Analyzer',
+  baSub:'Upload your bill and let our smart engine find what is driving the cost — and how to cut it.',
+  baUploadTitle:'Upload your bill',
+  baDropTitle:'Drop a photo or PDF here',
+  baDropHint:'or tap to choose a file (max 8 MB)',
+  baKwhLbl:'Units used (kWh)', baAmountLbl:'Total amount (฿)', baMonthLbl:'Billing month', baPrevLbl:'Last month (฿, optional)',
+  baAnalyzeBtn:'Analyze bill', baResultTitle:'Smart analysis',
+  baResultEmpty:'Fill in your bill and tap Analyze to see the diagnosis.',
+  baErrSize:'File is too large (max 8 MB).', baErrType:'Please upload an image or PDF.', baErrInputs:'Enter units (kWh) and total amount first.',
+  baAnalyzing:'Analyzing your bill…',
+  baVerdictHigh:'Your bill is {pct}% higher than usual', baVerdictMed:'Slightly above usual — up {pct}%',
+  baVerdictNormal:'Right around your usual level', baVerdictGood:'Lower than usual — nice work! ({pct}% less)',
+  baCausesTitle:'Likely causes',
+  baBillCheckOver:'About {amt} above the tariff estimate — likely Ft charge, taxes, or peak-time use.',
+  baBillCheckOk:'Matches the expected tariff (~{exp}).',
+  baBillCheckUnder:'Below the tariff estimate (~{exp}) — possibly an estimated reading or discount.',
+  baCompareTitle:'Comparison', baCompareThis:'This bill', baComparePrev:'Last month', baCompareExpected:'Tariff est.',
+  baSavingsTitle:'Ways to save', baSavingsTotal:'Potential savings: up to {amt}/month',
+  baAskEcobot:'Ask Ecobot about this bill',
+  baEcobotQ:'My bill is {amt} for {kwh} kWh this month. Why is it high and how can I reduce it?',
+  svAiAnalyzeTitle:'AI deep analysis', svAiAnalyzeSub:'Instant analysis from your usage and profile — no chatbot needed',
+  svAiAnalyzeBtn:'Analyze with AI', svAiAnalyzing:'AI is analyzing your data…',
+  svAiVerdictHigh:'High usage — {kwh}/mo is above average, with clear room to cut',
+  svAiVerdictNormal:'Moderate usage — {kwh}/mo, with solid savings still available',
+  svAiVerdictLow:'Efficient — {kwh}/mo is below average. A few tweaks go further',
+  svAiFindings:'Key findings', svAiRecs:'Recommended actions (by impact)',
+  svAiBottomLine:'Total potential savings', svAiSaveYear:'up to {amt}/year',
+  heroBadge:'AI-Powered Energy Intelligence for Thai Homes',
+  heroTitle:'Take Control of Your', heroTitleAccent:'Electricity Bill',
+  heroSub:'Track every watt, simulate your Thai electricity bill with real MEA/PEA tariffs, and unlock AI-powered savings strategies tailored to your lifestyle.',
+  heroCta:'Get Started Free', heroStartBtn:'Start Saving Free', heroSimBtn:'Try Bill Simulator',
+  quickEstTitle:'Quick Savings Estimate', heroSliderLabel:'Your monthly electricity bill (฿)', heroSaveLabel:'You could save up to',
+  featDash:'Dashboard', featAp:'Appliances', featBill:'Bill Simulator', featSV:'SmartVolt AI', featComm:'Community',
+  dashWelcome:'Welcome back', dashSub:'Here is your electricity snapshot for this month',
+  dashBill:'Monthly Bill', dashUsage:'Monthly Usage', dashAppliances:'Tracked Appliances', dashSavings:'Potential Savings',
+  dashBasedOn:'Based on {n} appliance(s)', dashPerMonth:'This month', dashActive:'Active devices', dashOptimized:'If optimized',
+  dashTrendTitle:'Monthly Cost Trend', dashBreakdownTitle:'Usage by Appliance', dashRiskTitle:'Bill Risk Gauge', dashForecastTitle:'Next Month Forecast',
+  dashNoData:'Add appliances to see your breakdown', dashForecastCta:'See SmartVolt recommendations →',
+  riskLow:'Low Risk', riskMed:'Moderate', riskHigh:'High Risk',
+  apTitle:'Appliances Tracker', apSub:'Log your devices to calculate their real cost',
+  apAddBtn:'Add Appliance', apTotalLbl:'Total Estimated Monthly Bill',
+  apEmptyTitle:'No appliances yet', apEmptyDesc:'Add your first appliance to start tracking.',
+  apCategory:'Category', apWatts:'Power (Watts)', apQty:'Quantity', apHours:'Hours/Day',
+  apEditTitle:'Edit Appliance', apAddTitle:'Add Appliance', apModalSub:"Enter your appliance's details",
+  apPreview:'Estimated cost', apUpdate:'Update', apAdd:'Add Appliance', cancel:'Cancel',
+  apAdded:'Appliance added!', apUpdated:'Appliance updated!', apDeleted:'Appliance removed.',
+  apOn:'Active', apOff:'Off', apDayShort:'day',
+  bsTitle:'Bill Simulator', bsSub:"Calculate your electricity bill using Thailand's progressive MEA/PEA tariff",
+  bsFormTitle:'Your Usage Details', bsUsageLabel:'Monthly Usage (kWh)', bsFtLabel:'Ft Charge (฿/kWh)',
+  bsCategoryLabel:'Rate Category', bsCatResidential:'Residential Type 1.2',
+  bsCalcBtn:'Calculate Bill', bsTotalLbl:'Total Bill Due', bsBaseLbl:'Base Electricity Cost',
+  bsFtCostLbl:'Ft Adjustment', bsVatLbl:'VAT (7%)', bsServiceLbl:'Service Charge',
+  bsTierTitle:'Progressive Tariff Breakdown', bsTierRange:'kWh Range', bsTierRate:'Rate/unit', bsTierUnits:'Units Used', bsTierCost:'Subtotal',
+  bsConfigTitle:'Tariff Rate Configurator', bsConfigSub:'Customize the tariff rates (defaults: real Thailand MEA/PEA values)',
+  bsTier1Rate:'Tier 1 Rate (0–150 kWh)', bsTier2Rate:'Tier 2 Rate (151–400 kWh)', bsTier3Rate:'Tier 3 Rate (401+ kWh)',
+  bsFtDefault:'Ft (fuel adjustment)', bsServiceFeeLabel:'Monthly Service Fee (฿)', bsVatPctLabel:'VAT %',
+  bsReset:'Reset to MEA/PEA defaults', bsConfigSaved:'Tariff configuration updated!', bsCalculated:'Bill calculated!',
+  svTitle:'SmartVolt — Your AI Energy Strategy', svSub:'Choose your lifestyle profile and let AI craft a personalised saving plan.',
+  svChooseTitle:'Select Your Lifestyle Profile', svChooseSub:'This helps us understand your usage patterns and design the right strategy.',
+  svStrategyFor:'Strategy for', svChangeProfile:'Change Profile', svUsageLabel:'Monthly Electricity Usage',
+  svBillComp:'Bill Comparison', svBreakdown:'Consumption Breakdown',
+  svAIHeader:'3 AI Strategy Pathways', svAIHeaderSub:'Ranked by effort and investment — pick what suits you.',
+  svCurrentBill:'Current Bill', svProjectedBill:'Projected Bill', svMonthlySavings:'Monthly Savings', svYearlySavings:'Yearly Savings',
+  svCurrentLbl:'Current', svProjectedLbl:'Projected', svInvestLabel:'Investment', svMaxSave:'Max Savings',
+  svFooterNote:"⚡ Estimates based on Thailand's EGAT/MEA tariff structure with Ft adjustments.",
+  commTitle:'Community Tips', commSub:'Share what works — completely anonymous. No account needed.',
+  commHandle:'Your anonymous handle', commHandleSub:'Stored locally on your device',
+  commShareTitle:'Share a tip', commPlaceholder:'Got a trick that cut your bill? Share it…', commPostBtn:'Post Anonymously',
+  commEmpty:'No tips yet — be the first!', commLike:'Helpful', commReply:'Reply',
+  commReplyPlaceholder:'Write a reply…', commSend:'Send', commToastPost:'Tip posted!', commToastReply:'Reply sent!', commToastEmpty:'Please write something first.',
+  ecobotSubtitle:'AI Energy Advisor', ecobotPlaceholder:'Ask about your energy bill…',
+  ecobotQuick1:'How can I save more?', ecobotQuick2:'Explain my bill', ecobotQuick3:'Tell me about solar', ecobotQuick4:'Compare strategies',
+  toastEmptyPost:'Write something first.',
+  justNow:'Just now', minAgo:'{n}m ago', hourAgo:'{n}h ago', dayAgo:'{n}d ago',
+  svLifestyleTitle:'Your Lifestyle Profile', svLifestyleSaved:'Auto-saved',
+  svOccupation:'Occupation', svHouseholdSizeLbl:'Household Size (people)',
+  svOccNone:'— Select occupation —', svOccWfh:'Work from Home', svOccOffice:'Office Worker',
+  svOccStudent:'Student', svOccRetired:'Retired', svOccBusiness:'Business Owner / Entrepreneur',
+  svBehaviorLabel:'Behavioral Habits',
+  svFlagAcAllDay:'AC running most of the day', svFlagGaming:'Gaming / high-power PC use',
+  svFlagWaterHeater:'Daily electric water heater', svFlagNightOwl:'Night owl (active after 10 PM)',
+  svFlagMultipleAC:'Multiple AC units running simultaneously',
+  svLifestyleImpact:'Lifestyle signals detected — advice personalised below',
+  landTrust:'Trusted by 50,000+ Thai households',
+  land3dTitle:'SmartVolt · Energy brought to life',
+  landStatSaveLabel:'Avg. bill reduction', landStatHomesLabel:'Households trust us',
+  landStatMonitorLabel:'Real-time monitoring', landStatSolarVal:'3 yrs', landStatSolarLabel:'Solar payback',
+  landFeatKicker:'FEATURES', landFeatTitle:'Everything your home needs, in one place',
+  landFeatSub:'A complete toolkit designed to put you in full control of your energy.',
+  landFeatDashDesc:'See your monthly bill, usage, and savings at a glance with clear, real-time charts.',
+  landFeatApDesc:'Log every device to calculate its real cost and spot the energy hogs in your home.',
+  landFeatBillDesc:"Calculate your bill with Thailand's real progressive MEA/PEA tariffs and Ft charges.",
+  landFeatSVDesc:'Get personalised saving strategies based on your lifestyle and household habits.',
+  landFeatCommDesc:'Share and discover real money-saving tricks — anonymous, no account needed.',
+  landFeatForecast:'Bill Forecast', landFeatForecastDesc:"Predict next month's bill ahead of time so you can plan your budget with confidence.",
+  landHowKicker:'HOW IT WORKS', landHowTitle:'Start saving in 3 simple steps',
+  landStep1Title:'Add your appliances', landStep1Desc:'Log the devices in your home in minutes — no meter rewiring required.',
+  landStep2Title:'Let AI learn your home', landStep2Desc:'SmartVolt analyses your usage and lifestyle to truly understand your home.',
+  landStep3Title:'Save automatically', landStep3Desc:'Get tailored advice and smart routines that cut your bill every single day.',
+  landCtaTitle:'Ready to cut your electricity bill?', landCtaSub:'Start free today — no credit card needed. See results from your very first bill.',
+},
+th:{
+  brandName:'Anutung Electric', perMonth:'/เดือน', perYear:'/ปี',
+  navDashboard:'แดชบอร์ด', navAppliances:'ติดตามเครื่องใช้ไฟฟ้า', navBillSim:'จำลองค่าไฟ', navSmartVolt:'SmartVolt', navCommunity:'ชุมชน',
+  tabDashboard:'แดชบอร์ด', tabAppliances:'อุปกรณ์', tabBillSim:'จำลองบิล', tabSmartVolt:'SmartVolt', tabCommunity:'ชุมชน',
+  navAnalyzer:'วิเคราะห์บิล',
+  dashAnalyzerCardTitle:'วิเคราะห์บิลค่าไฟด้วย AI',
+  dashAnalyzerCardSub:'อัปโหลดบิล หาสาเหตุที่ค่าไฟแพง พร้อมวิธีประหยัด',
+  baTitle:'วิเคราะห์บิลค่าไฟ',
+  baSub:'อัปโหลดบิลแล้วให้ระบบอัจฉริยะหาว่าทำไมค่าไฟแพง และจะลดยังไง',
+  baUploadTitle:'อัปโหลดบิล',
+  baDropTitle:'ลากรูปหรือ PDF มาวางที่นี่',
+  baDropHint:'หรือแตะเพื่อเลือกไฟล์ (สูงสุด 8 MB)',
+  baKwhLbl:'หน่วยที่ใช้ (kWh)', baAmountLbl:'ยอดเงินรวม (฿)', baMonthLbl:'รอบบิล / เดือน', baPrevLbl:'เดือนก่อน (฿, ไม่บังคับ)',
+  baAnalyzeBtn:'วิเคราะห์บิล', baResultTitle:'ผลวิเคราะห์อัจฉริยะ',
+  baResultEmpty:'กรอกข้อมูลบิลแล้วกดวิเคราะห์ เพื่อดูผลวินิจฉัย',
+  baErrSize:'ไฟล์ใหญ่เกินไป (สูงสุด 8 MB)', baErrType:'กรุณาอัปโหลดรูปภาพหรือ PDF', baErrInputs:'กรอกหน่วย (kWh) และยอดเงินรวมก่อน',
+  baAnalyzing:'กำลังวิเคราะห์บิล…',
+  baVerdictHigh:'ค่าไฟเดือนนี้สูงกว่าปกติ {pct}%', baVerdictMed:'สูงกว่าปกติเล็กน้อย +{pct}%',
+  baVerdictNormal:'อยู่ในเกณฑ์ปกติ', baVerdictGood:'ต่ำกว่าปกติ เยี่ยมมาก! (ลดลง {pct}%)',
+  baCausesTitle:'สาเหตุที่น่าจะเป็น',
+  baBillCheckOver:'สูงกว่าค่าที่คำนวณจากอัตราประมาณ {amt} — อาจมาจากค่า Ft ภาษี หรือใช้ไฟช่วงพีค',
+  baBillCheckOk:'สอดคล้องกับอัตราค่าไฟ (คำนวณได้ ~{exp})',
+  baBillCheckUnder:'ต่ำกว่าที่คำนวณ (~{exp}) — อาจเป็นการประมาณหน่วยหรือมีส่วนลด',
+  baCompareTitle:'เปรียบเทียบ', baCompareThis:'บิลนี้', baComparePrev:'เดือนก่อน', baCompareExpected:'ตามอัตรา',
+  baSavingsTitle:'วิธีประหยัด', baSavingsTotal:'ประหยัดได้สูงสุด {amt}/เดือน',
+  baAskEcobot:'ถาม Ecobot เกี่ยวกับบิลนี้',
+  baEcobotQ:'บิลเดือนนี้ {amt} ใช้ไป {kwh} หน่วย ทำไมถึงสูงและจะลดยังไงดี?',
+  svAiAnalyzeTitle:'AI วิเคราะห์เชิงลึก', svAiAnalyzeSub:'วิเคราะห์ทันทีจากการใช้ไฟและโปรไฟล์ของคุณ — ไม่ต้องถามแชทบอท',
+  svAiAnalyzeBtn:'วิเคราะห์ด้วย AI', svAiAnalyzing:'AI กำลังวิเคราะห์ข้อมูลของคุณ…',
+  svAiVerdictHigh:'ใช้ไฟสูง — {kwh}/เดือน สูงกว่าค่าเฉลี่ย มีช่องว่างให้ลดได้ชัดเจน',
+  svAiVerdictNormal:'ใช้ไฟปานกลาง — {kwh}/เดือน ยังประหยัดเพิ่มได้อีก',
+  svAiVerdictLow:'ประหยัดดี — {kwh}/เดือน ต่ำกว่าค่าเฉลี่ย ปรับอีกนิดยิ่งดี',
+  svAiFindings:'ข้อค้นพบสำคัญ', svAiRecs:'คำแนะนำ (เรียงตามผลกระทบ)',
+  svAiBottomLine:'ประหยัดได้สูงสุดรวม', svAiSaveYear:'สูงสุด {amt}/ปี',
+  heroBadge:'ระบบอัจฉริยะประหยัดพลังงานสำหรับบ้านไทย',
+  heroTitle:'ควบคุม', heroTitleAccent:'ค่าไฟของคุณ',
+  heroSub:'ติดตามทุกวัตต์ จำลองค่าไฟตามอัตรา MEA/PEA จริงของไทย และรับแผนประหยัดพลังงานเฉพาะบุคคลจาก AI',
+  heroCta:'เริ่มต้นฟรี', heroStartBtn:'เริ่มประหยัดฟรี', heroSimBtn:'ลองจำลองค่าไฟ',
+  quickEstTitle:'ประเมินการประหยัดอย่างรวดเร็ว', heroSliderLabel:'ค่าไฟเฉลี่ยต่อเดือน (฿)', heroSaveLabel:'คุณอาจประหยัดได้ถึง',
+  featDash:'แดชบอร์ด', featAp:'ติดตามเครื่องใช้', featBill:'จำลองค่าไฟ', featSV:'SmartVolt AI', featComm:'ชุมชน',
+  dashWelcome:'ยินดีต้อนรับกลับ', dashSub:'ภาพรวมค่าไฟของคุณในเดือนนี้',
+  dashBill:'ค่าไฟต่อเดือน', dashUsage:'การใช้ไฟต่อเดือน', dashAppliances:'เครื่องใช้ไฟฟ้าที่ติดตาม', dashSavings:'ประหยัดได้เพิ่ม',
+  dashBasedOn:'จาก {n} รายการ', dashPerMonth:'เดือนนี้', dashActive:'อุปกรณ์ที่ใช้งาน', dashOptimized:'หากปรับให้เหมาะสม',
+  dashTrendTitle:'แนวโน้มค่าไฟรายเดือน', dashBreakdownTitle:'การใช้ไฟตามอุปกรณ์', dashRiskTitle:'ดัชนีความเสี่ยงค่าไฟ', dashForecastTitle:'คาดการณ์เดือนถัดไป',
+  dashNoData:'เพิ่มเครื่องใช้ไฟฟ้าเพื่อดูการวิเคราะห์', dashForecastCta:'ดูคำแนะนำ SmartVolt →',
+  riskLow:'เสี่ยงต่ำ', riskMed:'ปานกลาง', riskHigh:'เสี่ยงสูง',
+  apTitle:'ติดตามเครื่องใช้ไฟฟ้า', apSub:'บันทึกอุปกรณ์ของคุณเพื่อคำนวณต้นทุนที่แท้จริง',
+  apAddBtn:'เพิ่มเครื่องใช้ไฟฟ้า', apTotalLbl:'ค่าไฟประมาณการรวมต่อเดือน',
+  apEmptyTitle:'ยังไม่มีเครื่องใช้ไฟฟ้า', apEmptyDesc:'เพิ่มเครื่องใช้ไฟฟ้าชิ้นแรกเพื่อเริ่มติดตาม',
+  apCategory:'ประเภท', apWatts:'กำลังไฟ (วัตต์)', apQty:'จำนวน', apHours:'ชั่วโมง/วัน',
+  apEditTitle:'แก้ไขเครื่องใช้ไฟฟ้า', apAddTitle:'เพิ่มเครื่องใช้ไฟฟ้า', apModalSub:'กรอกรายละเอียดเครื่องใช้ไฟฟ้า',
+  apPreview:'ค่าใช้จ่ายประมาณการ', apUpdate:'อัปเดต', apAdd:'เพิ่มเครื่องใช้ไฟฟ้า', cancel:'ยกเลิก',
+  apAdded:'เพิ่มเครื่องใช้ไฟฟ้าแล้ว!', apUpdated:'อัปเดตเครื่องใช้ไฟฟ้าแล้ว!', apDeleted:'ลบเครื่องใช้ไฟฟ้าแล้ว',
+  apOn:'ใช้งานอยู่', apOff:'ปิด', apDayShort:'วัน',
+  bsTitle:'จำลองค่าไฟ', bsSub:'คำนวณค่าไฟตามอัตราก้าวหน้า MEA/PEA ของไทย',
+  bsFormTitle:'รายละเอียดการใช้ไฟ', bsUsageLabel:'การใช้ไฟต่อเดือน (kWh)', bsFtLabel:'ค่า Ft (บาท/หน่วย)',
+  bsCategoryLabel:'ประเภทอัตราค่าไฟ', bsCatResidential:'บ้านอยู่อาศัย ประเภท 1.2',
+  bsCalcBtn:'คำนวณค่าไฟ', bsTotalLbl:'ค่าไฟที่ต้องชำระ', bsBaseLbl:'ค่าไฟฟ้าฐาน',
+  bsFtCostLbl:'ค่า Ft', bsVatLbl:'ภาษีมูลค่าเพิ่ม (7%)', bsServiceLbl:'ค่าบริการรายเดือน',
+  bsTierTitle:'รายละเอียดอัตราก้าวหน้า', bsTierRange:'ช่วง kWh', bsTierRate:'อัตรา/หน่วย', bsTierUnits:'หน่วยที่ใช้', bsTierCost:'รวม',
+  bsConfigTitle:'ตั้งค่าอัตราค่าไฟ', bsConfigSub:'ปรับอัตราค่าไฟ (ค่าเริ่มต้นจาก MEA/PEA ของไทย)',
+  bsTier1Rate:'อัตราชั้น 1 (0–150 หน่วย)', bsTier2Rate:'อัตราชั้น 2 (151–400 หน่วย)', bsTier3Rate:'อัตราชั้น 3 (401+ หน่วย)',
+  bsFtDefault:'ค่า Ft (ค่าปรับเชื้อเพลิง)', bsServiceFeeLabel:'ค่าบริการรายเดือน (฿)', bsVatPctLabel:'อัตรา VAT %',
+  bsReset:'รีเซ็ตเป็นอัตรา MEA/PEA', bsConfigSaved:'อัปเดตการตั้งค่าอัตราค่าไฟแล้ว!', bsCalculated:'คำนวณค่าไฟแล้ว!',
+  svTitle:'SmartVolt — กลยุทธ์ประหยัดพลังงานของคุณ', svSub:'เลือกโปรไฟล์ไลฟ์สไตล์และให้ AI สร้างแผนประหยัดเฉพาะคุณ',
+  svChooseTitle:'เลือกโปรไฟล์ไลฟ์สไตล์ของคุณ', svChooseSub:'เพื่อให้เราเข้าใจรูปแบบการใช้ไฟและออกแบบกลยุทธ์ที่ดีที่สุด',
+  svStrategyFor:'กลยุทธ์สำหรับ', svChangeProfile:'เปลี่ยนโปรไฟล์', svUsageLabel:'การใช้ไฟต่อเดือน',
+  svBillComp:'เปรียบเทียบค่าไฟ', svBreakdown:'สัดส่วนการใช้ไฟ',
+  svAIHeader:'3 เส้นทางกลยุทธ์จาก AI', svAIHeaderSub:'เรียงตามความง่ายและการลงทุน เลือกแนวทางที่เหมาะกับคุณ',
+  svCurrentBill:'ค่าไฟปัจจุบัน', svProjectedBill:'ค่าไฟที่คาดการณ์', svMonthlySavings:'ประหยัดต่อเดือน', svYearlySavings:'ประหยัดต่อปี',
+  svCurrentLbl:'ปัจจุบัน', svProjectedLbl:'หลังปรับ', svInvestLabel:'เงินลงทุน', svMaxSave:'ประหยัดได้สูงสุด',
+  svFooterNote:'⚡ ประมาณการตามอัตราค่าไฟฟ้าของ กฟผ./MEA พร้อมค่า Ft',
+  commTitle:'เคล็ดลับจากชุมชน', commSub:'แชร์สิ่งที่ได้ผล — ไม่ระบุตัวตน ไม่ต้องสมัครสมาชิก',
+  commHandle:'ชื่อนิรนามของคุณ', commHandleSub:'เก็บไว้ในอุปกรณ์ของคุณ',
+  commShareTitle:'แบ่งปันเคล็ดลับ', commPlaceholder:'มีเคล็ดลับที่ช่วยลดค่าไฟไหม? แบ่งปันได้เลย…', commPostBtn:'โพสต์แบบไม่ระบุตัวตน',
+  commEmpty:'ยังไม่มีเคล็ดลับ — เป็นคนแรก!', commLike:'มีประโยชน์', commReply:'ตอบกลับ',
+  commReplyPlaceholder:'เขียนคำตอบ…', commSend:'ส่ง', commToastPost:'โพสต์เคล็ดลับแล้ว!', commToastReply:'ส่งคำตอบแล้ว!', commToastEmpty:'กรุณาเขียนข้อความก่อน',
+  ecobotSubtitle:'ที่ปรึกษาพลังงาน AI', ecobotPlaceholder:'ถามเกี่ยวกับค่าไฟของคุณ…',
+  ecobotQuick1:'ฉันจะประหยัดไฟได้อย่างไร?', ecobotQuick2:'อธิบายค่าไฟให้ฉัน', ecobotQuick3:'บอกฉันเกี่ยวกับโซลาร์เซลล์', ecobotQuick4:'เปรียบเทียบกลยุทธ์',
+  toastEmptyPost:'กรุณาเขียนข้อความก่อน',
+  justNow:'เมื่อสักครู่', minAgo:'{n} นาทีที่แล้ว', hourAgo:'{n} ชั่วโมงที่แล้ว', dayAgo:'{n} วันที่แล้ว',
+  svLifestyleTitle:'โปรไฟล์ไลฟ์สไตล์ของคุณ', svLifestyleSaved:'บันทึกอัตโนมัติ',
+  svOccupation:'อาชีพ', svHouseholdSizeLbl:'จำนวนสมาชิกในครัวเรือน (คน)',
+  svOccNone:'— เลือกอาชีพ —', svOccWfh:'ทำงานที่บ้าน (WFH)', svOccOffice:'ทำงานนอกบ้าน',
+  svOccStudent:'นักศึกษา', svOccRetired:'เกษียณอายุ', svOccBusiness:'เจ้าของธุรกิจ / ผู้ประกอบการ',
+  svBehaviorLabel:'พฤติกรรมการใช้ไฟ',
+  svFlagAcAllDay:'เปิดแอร์เกือบทั้งวัน', svFlagGaming:'เล่นเกม / ใช้คอมพิวเตอร์กำลังสูง',
+  svFlagWaterHeater:'ใช้เครื่องทำน้ำอุ่นไฟฟ้าทุกวัน', svFlagNightOwl:'ตื่นดึก (ใช้งานหลัง 4 ทุ่ม)',
+  svFlagMultipleAC:'เปิดแอร์หลายตัวพร้อมกัน',
+  svLifestyleImpact:'ตรวจพบสัญญาณไลฟ์สไตล์ — คำแนะนำด้านล่างถูกปรับให้เหมาะสมแล้ว',
+  landTrust:'ครัวเรือนไทยกว่า 50,000 หลังไว้วางใจ',
+  land3dTitle:'SmartVolt · พลังงานที่มีชีวิต',
+  landStatSaveLabel:'ค่าไฟที่ลดได้โดยเฉลี่ย', landStatHomesLabel:'ครัวเรือนที่ไว้วางใจ',
+  landStatMonitorLabel:'ติดตามแบบเรียลไทม์', landStatSolarVal:'3 ปี', landStatSolarLabel:'จุดคืนทุนโซลาร์',
+  landFeatKicker:'ฟีเจอร์', landFeatTitle:'ทุกอย่างที่บ้านคุณต้องการ ในที่เดียว',
+  landFeatSub:'เครื่องมือครบครันที่ออกแบบมาเพื่อให้คุณควบคุมพลังงานได้อย่างเต็มที่',
+  landFeatDashDesc:'ดูค่าไฟ การใช้ไฟ และยอดประหยัดรายเดือนได้ในพริบตา ด้วยกราฟเรียลไทม์ที่เข้าใจง่าย',
+  landFeatApDesc:'บันทึกทุกอุปกรณ์เพื่อคำนวณต้นทุนจริง และค้นหาเครื่องใช้ไฟฟ้าที่กินไฟมากในบ้าน',
+  landFeatBillDesc:'คำนวณค่าไฟตามอัตราก้าวหน้า MEA/PEA จริงของไทย พร้อมค่า Ft',
+  landFeatSVDesc:'รับกลยุทธ์ประหยัดเฉพาะบุคคล อิงจากไลฟ์สไตล์และพฤติกรรมในครัวเรือนของคุณ',
+  landFeatCommDesc:'แบ่งปันและค้นพบเคล็ดลับประหยัดเงินจริง — ไม่ระบุตัวตน ไม่ต้องสมัครสมาชิก',
+  landFeatForecast:'พยากรณ์ค่าไฟ', landFeatForecastDesc:'คาดการณ์ค่าไฟเดือนถัดไปล่วงหน้า ช่วยให้วางแผนงบประมาณได้อย่างมั่นใจ',
+  landHowKicker:'วิธีใช้งาน', landHowTitle:'เริ่มประหยัดได้ใน 3 ขั้นตอน',
+  landStep1Title:'เพิ่มเครื่องใช้ไฟฟ้า', landStep1Desc:'บันทึกอุปกรณ์ในบ้านได้ในไม่กี่นาที ไม่ต้องเดินสายมิเตอร์ใหม่',
+  landStep2Title:'ให้ AI เรียนรู้บ้านคุณ', landStep2Desc:'SmartVolt วิเคราะห์การใช้ไฟและไลฟ์สไตล์ เพื่อเข้าใจบ้านของคุณอย่างแท้จริง',
+  landStep3Title:'ประหยัดแบบอัตโนมัติ', landStep3Desc:'รับคำแนะนำเฉพาะบุคคลและระบบอัจฉริยะที่ช่วยลดค่าไฟให้คุณทุกวัน',
+  landCtaTitle:'พร้อมลดค่าไฟบ้านคุณแล้วหรือยัง?', landCtaSub:'เริ่มต้นฟรีวันนี้ ไม่ต้องใช้บัตรเครดิต เห็นผลตั้งแต่บิลแรก',
+}
+};
+
+// ── Application State ───────────────────────────────────
+var DEFAULT_TARIFF = { tiers:[{max:150,rate:3.2484},{max:400,rate:4.2218},{max:999999,rate:4.4217}], serviceFee:8.19, ft:0.8232, vatPct:7 };
+var state = {
+  lang:'en', currency:'THB', unit:'kWh', theme:'light',
+  activeSec:'hero',
+  appliances:[], nextApId:1,
+  profile:null, sv:{ usageKwh:300, activeTab:'quick' },
+  lifestyle:{ occupation:'', householdSize:3, flags:{ acAllDay:false, gaming:false, waterHeater:false, nightOwl:false, multipleAC:false } },
+  billSim:{ kwh:300 },
+  tariff:JSON.parse(JSON.stringify(DEFAULT_TARIFF)),
+  handle:'', handleColor:'#0F4C81',
+  community:[],
+  chatHistory:[], chatBotSeeded:false,
+  charts:{}
+};
+
+// ── Theme Helpers ───────────────────────────────────
+function isDarkMode(){ return document.documentElement.getAttribute('data-theme')==='dark'; }
+function chartTextColor(){ return isDarkMode()?'#4A6A90':'#99C3FF'; }
+function chartGridColor(){ return isDarkMode()?'rgba(30,51,85,0.4)':'rgba(230,240,255,0.8)'; }
+function chartFontFamily(){ return 'Plus Jakarta Sans'; }
+
+// ── I18n ───────────────────────────────────────────────
+function t(k){ return (STRINGS[state.lang]&&STRINGS[state.lang][k])||STRINGS.en[k]||k; }
+function tf(k,vals){ var s=t(k); Object.keys(vals||{}).forEach(function(v){s=s.replace('{'+v+'}',vals[v]);}); return s; }
+function pick(obj){ return obj[state.lang]||obj.en; }
+function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+
+// ── Format ─────────────────────────────────────────────
+function money(thb){ var v=thb*FX[state.currency]; return SYM[state.currency]+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function moneyRaw(thb){ return thb*FX[state.currency]; }
+function energy(kwh){ var v=kwh*UNIT_FACTOR[state.unit]; return v.toLocaleString(undefined,{maximumFractionDigits:state.unit==='kWh'?1:0})+' '+UNIT_LABEL_SHORT[state.unit]; }
+function energyRaw(kwh){ return kwh*UNIT_FACTOR[state.unit]; }
+function timeAgo(ts){ var d=Math.floor((Date.now()-ts)/1000); if(d<60)return t('justNow'); if(d<3600)return tf('minAgo',{n:Math.floor(d/60)}); if(d<86400)return tf('hourAgo',{n:Math.floor(d/3600)}); return tf('dayAgo',{n:Math.floor(d/86400)}); }
+
+// ── Tariff Engine ───────────────────────────────────────
+function calcTariff(kwh){
+  kwh=Math.max(0,kwh||0);
+  var T=state.tariff, remaining=kwh, base=0, prevMax=0, breakdown=[];
+  T.tiers.forEach(function(tier){
+    var bandKwh=Math.max(0,Math.min(remaining,tier.max-prevMax));
+    var bandCost=bandKwh*tier.rate;
+    if(bandKwh>0) breakdown.push({from:prevMax+1,to:tier.max>=999999?null:tier.max,rate:tier.rate,kwh:bandKwh,cost:bandCost});
+    base+=bandCost; remaining-=bandKwh; prevMax=tier.max;
+  });
+  var ftCost=kwh*T.ft;
+  var subtotal=base+T.serviceFee+ftCost;
+  var vat=subtotal*(T.vatPct/100);
+  var total=subtotal+vat;
+  return {kwh:kwh,base:base,serviceFee:T.serviceFee,ftCost:ftCost,subtotal:subtotal,vat:vat,total:total,breakdown:breakdown};
+}
+
+// ── Appliance Engine ────────────────────────────────────
+function appKwh(a){ return (a.watts*a.hours*30*a.qty)/1000; }
+function getApplianceResults(){
+  var active=state.appliances.filter(function(a){return a.enabled;});
+  var items=active.map(function(a){return Object.assign({},a,{kwh:appKwh(a)});});
+  var totalKwh=items.reduce(function(s,i){return s+i.kwh;},0);
+  var tariff=calcTariff(totalKwh);
+  return {items:items,totalKwh:totalKwh,tariff:tariff,count:state.appliances.length};
+}
+
+// ── Bill Analyzer ───────────────────────────────────────
+var baFileData=null, baChart=null;
+var BA_MONTHS={
+  en:['January','February','March','April','May','June','July','August','September','October','November','December'],
+  th:['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
+};
+var BA_CAT_ICON={ac:'wind',heating:'flame',kitchen:'utensils',lighting:'lightbulb',electronics:'tv',appliances:'plug'};
+function baPopulateMonths(){
+  var sel=document.getElementById('baMonth'); if(!sel) return;
+  var cur=sel.value, months=BA_MONTHS[state.lang]||BA_MONTHS.en;
+  sel.innerHTML=months.map(function(m,i){return '<option value="'+i+'">'+esc(m)+'</option>';}).join('');
+  sel.value=(cur!=='')?cur:String(new Date().getMonth());
+}
+function baShowError(msg){ var e=document.getElementById('baError'); if(e){e.textContent=msg;e.classList.remove('hidden');} }
+function baHideError(){ var e=document.getElementById('baError'); if(e) e.classList.add('hidden'); }
+function baReadFile(file){
+  if(!file) return;
+  if(file.size>8*1024*1024){ baShowError(t('baErrSize')); return; }
+  if(!(/^image\//.test(file.type)||file.type==='application/pdf')){ baShowError(t('baErrType')); return; }
+  baHideError();
+  var reader=new FileReader();
+  reader.onload=function(e){ baFileData={name:file.name,type:file.type,url:e.target.result}; baRenderPreview(); };
+  reader.readAsDataURL(file);
+}
+function baRenderPreview(){
+  var wrap=document.getElementById('baPreview'),thumb=document.getElementById('baThumb'),
+      chip=document.getElementById('baFileChip'),nm=document.getElementById('baFileName');
+  if(!wrap) return;
+  if(!baFileData){ wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  if(/^image\//.test(baFileData.type)){ thumb.src=baFileData.url; thumb.classList.remove('hidden'); chip.classList.add('hidden'); }
+  else { chip.classList.remove('hidden'); nm.textContent=baFileData.name; thumb.classList.add('hidden'); }
+}
+function baClearFile(){ baFileData=null; baRenderPreview(); var f=document.getElementById('baFile'); if(f) f.value=''; }
+function baComputeCauses(ar,monthIdx){
+  var hot=(monthIdx>=2&&monthIdx<=5); // Mar–Jun = Thai hot season
+  if(ar.totalKwh>0 && ar.items.length){
+    var byCat={};
+    ar.items.forEach(function(it){ var c=it.cat||'appliances'; byCat[c]=(byCat[c]||0)+it.kwh; });
+    return Object.keys(byCat).map(function(c){return {cat:c,kwh:byCat[c]};})
+      .sort(function(a,b){return b.kwh-a.kwh;}).slice(0,3)
+      .map(function(o){return {ic:BA_CAT_ICON[o.cat]||'plug',cat:o.cat,pct:Math.round(o.kwh/ar.totalKwh*100)};});
+  }
+  return hot
+    ?[{ic:'wind',cat:'ac',pct:48},{ic:'flame',cat:'heating',pct:18},{ic:'utensils',cat:'kitchen',pct:14}]
+    :[{ic:'utensils',cat:'kitchen',pct:30},{ic:'wind',cat:'ac',pct:24},{ic:'lightbulb',cat:'lighting',pct:16}];
+}
+function analyzeBill(){
+  var kwh=parseFloat(document.getElementById('baKwh').value);
+  var amount=parseFloat(document.getElementById('baAmount').value);
+  var prev=parseFloat(document.getElementById('baPrev').value);
+  var monthIdx=parseInt(document.getElementById('baMonth').value,10); if(isNaN(monthIdx)) monthIdx=new Date().getMonth();
+  if(!(kwh>0)||!(amount>0)){ baShowError(t('baErrInputs')); return; }
+  baHideError();
+  var expected=calcTariff(kwh).total;
+  var hasPrev=prev>0;
+  var ref=hasPrev?prev:expected;
+  var overPct=ref>0?((amount-ref)/ref*100):0;
+  var severity=overPct>20?'high':(overPct>8?'med':(overPct<-8?'good':'low'));
+  var pathway=[];
+  try{ pathway=getPathwayItems('quick')||[]; }catch(e){ pathway=[]; }
+  if(!pathway.length) pathway=[{en:'Set AC to 26°C',th:'ตั้งแอร์ 26°C',pct:5},{en:'Unplug standby devices',th:'ถอดปลั๊กเครื่องที่ไม่ใช้',pct:3},{en:'Switch to LED lighting',th:'เปลี่ยนเป็นไฟ LED',pct:3}];
+  var savings=pathway.slice(0,4).map(function(p){return {en:p.en,th:p.th,baht:amount*(p.pct/100)};});
+  state.lastBillAnalysis={kwh:kwh,amount:amount,prev:hasPrev?prev:null,monthIdx:monthIdx,
+    expected:expected,overPct:overPct,severity:severity,
+    causes:baComputeCauses(getApplianceResults(),monthIdx),savings:savings};
+  saveLS();
+  baRenderResult(state.lastBillAnalysis,true);
+}
+function baBuildCompareChart(a){
+  var cv=document.getElementById('baCompareChart'); if(!cv) return;
+  if(baChart){ baChart.destroy(); baChart=null; }
+  var labels=[t('baCompareThis')],data=[moneyRaw(a.amount)],colors=['#0F4C81'];
+  if(a.prev){ labels.push(t('baComparePrev')); data.push(moneyRaw(a.prev)); colors.push('#99C3FF'); }
+  labels.push(t('baCompareExpected')); data.push(moneyRaw(a.expected)); colors.push('#2D7DD2');
+  baChart=new Chart(cv,{type:'bar',
+    data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderRadius:8,maxBarThickness:64}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return SYM[state.currency]+ctx.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0});}}}},
+      scales:{x:{ticks:{color:chartTextColor(),font:{family:chartFontFamily()}},grid:{display:false}},
+              y:{ticks:{color:chartTextColor(),font:{family:chartFontFamily()}},grid:{color:chartGridColor()}}}}});
+}
+function baAskEcobot(a){
+  openEcobot();
+  var inp=document.getElementById('ecobotInput');
+  if(inp){ inp.value=tf('baEcobotQ',{kwh:Math.round(a.kwh),amt:money(a.amount)}); }
+  if(typeof sendEcobotMsg==='function') sendEcobotMsg();
+}
+function baRenderResult(a,animate){
+  var box=document.getElementById('baResult'); if(!box) return;
+  if(animate){
+    box.innerHTML='<div class="ba-result-empty"><i data-lucide="loader" class="icon-lg mb-3" style="animation:spin 1s linear infinite"></i><p class="text-sm font-700">'+esc(t('baAnalyzing'))+'</p></div>';
+    lucide.createIcons({nodes:[box]});
+    setTimeout(function(){ baRenderResult(a,false); },650);
+    return;
+  }
+  var sev={high:{bg:'rgba(226,75,74,.12)',col:'#E24B4A',ic:'alert-triangle',key:'baVerdictHigh'},
+           med:{bg:'rgba(239,159,39,.15)',col:'#BA7517',ic:'alert-circle',key:'baVerdictMed'},
+           low:{bg:'rgba(15,76,129,.10)',col:'#0F4C81',ic:'circle-check',key:'baVerdictNormal'},
+           good:{bg:'rgba(99,153,34,.15)',col:'#3B6D11',ic:'leaf',key:'baVerdictGood'}}[a.severity]||{bg:'rgba(15,76,129,.10)',col:'#0F4C81',ic:'circle-check',key:'baVerdictNormal'};
+  var pctTxt=Math.abs(Math.round(a.overPct));
+  var bc=(a.amount>a.expected*1.15)?tf('baBillCheckOver',{amt:money(a.amount-a.expected)})
+        :(a.amount<a.expected*0.85)?tf('baBillCheckUnder',{exp:money(a.expected)})
+        :tf('baBillCheckOk',{exp:money(a.expected)});
+  var causesHtml=a.causes.map(function(c){
+    return '<div class="ba-cause-row"><div class="ba-cause-ic"><i data-lucide="'+c.ic+'" class="icon-sm"></i></div>'
+      +'<span class="text-sm font-700" style="color:var(--text-pri)">'+esc(pick(CAT_LABELS[c.cat]||{en:c.cat,th:c.cat}))+'</span><span class="ba-pct">~'+c.pct+'%</span></div>';
+  }).join('');
+  var totalSave=a.savings.reduce(function(s,x){return s+x.baht;},0);
+  var savingsHtml=a.savings.map(function(x){
+    return '<div class="flex items-start gap-2 text-sm py-1.5 border-t" style="border-color:var(--border-light-col)"><i data-lucide="check" class="icon-sm mt-0.5 flex-shrink-0" style="color:#3B6D11"></i>'
+      +'<span class="flex-1" style="color:var(--text-pri)">'+esc(pick(x))+'</span><span class="font-800 flex-shrink-0" style="color:var(--text-sec)">'+money(x.baht)+'</span></div>';
+  }).join('');
+  box.innerHTML=
+    '<div class="ba-verdict" style="background:'+sev.bg+'"><i data-lucide="'+sev.ic+'" class="icon-md flex-shrink-0" style="color:'+sev.col+';margin-top:1px"></i>'
+      +'<div><p class="font-900 text-base leading-snug" style="color:'+sev.col+'">'+esc(tf(sev.key,{pct:pctTxt}))+'</p>'
+      +'<p class="text-xs mt-1" style="color:var(--text-sec)">'+esc(bc)+'</p></div></div>'
+    +'<p class="ba-eyebrow mt-5 mb-1">'+esc(t('baCausesTitle'))+'</p>'+causesHtml
+    +'<p class="ba-eyebrow mt-5 mb-2">'+esc(t('baCompareTitle'))+'</p>'
+    +'<div style="position:relative;height:150px"><canvas id="baCompareChart"></canvas></div>'
+    +'<p class="ba-eyebrow mt-5 mb-1">'+esc(t('baSavingsTitle'))+'</p>'+savingsHtml
+    +'<div class="mt-3 p-3 rounded-xl flex items-center gap-2" style="background:var(--surface-2)"><i data-lucide="piggy-bank" class="icon-sm" style="color:var(--text-sec)"></i><span class="text-xs font-800" style="color:var(--text-sec)">'+esc(tf('baSavingsTotal',{amt:money(totalSave)}))+'</span></div>'
+    +'<button id="baAskBot" class="w-full mt-4 flex items-center justify-center gap-2 border-2 font-700 text-sm px-4 py-3 rounded-2xl transition-all duration-200" style="border-color:var(--border-col);color:var(--text-sec)"><i data-lucide="message-circle" class="icon-sm"></i>'+esc(t('baAskEcobot'))+'</button>';
+  lucide.createIcons({nodes:[box]});
+  baBuildCompareChart(a);
+  var askBtn=document.getElementById('baAskBot'); if(askBtn) askBtn.addEventListener('click',function(){baAskEcobot(a);});
+}
+function renderBillAnalyzer(){ baPopulateMonths(); if(state.lastBillAnalysis) baRenderResult(state.lastBillAnalysis,false); }
+
+// ── Community Handles ───────────────────────────────────
+var HANDLE_POOL=['Smart Volt','Eco Sage','Night Watt','Solar Fox','Grid Ninja','Volt Scout','Amp Rider','Lumen Cat','Kilo Monk','Watt Hawk','Current Fox','Power Sage'];
+var HANDLE_COLORS=['#0F4C81','#0C3E6B','#2D7DD2','#06223F','#094480','#1a5b9e'];
+function genHandle(){ return HANDLE_POOL[Math.floor(Math.random()*HANDLE_POOL.length)]+' #'+(Math.floor(Math.random()*900)+100); }
+function colorForHandle(h){ var n=0; for(var i=0;i<h.length;i++) n=(n*31+h.charCodeAt(i))>>>0; return HANDLE_COLORS[n%HANDLE_COLORS.length]; }
+function initials(h){ var p=h.replace('#','').trim().split(' '); return((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
+
+// ── Community Seeds ─────────────────────────────────────
+var SEED_POSTS=[
+  {en:'Setting my AC to 26°C instead of 22°C saved me around ฿350 last month. The comfort difference is barely noticeable!',th:'ปรับแอร์จาก 22°C เป็น 26°C ประหยัดได้ประมาณ 350 บาทเดือนที่แล้ว ไม่รู้สึกต่างมากเลย!'},
+  {en:'Switched all bulbs to LED. Sounds basic but our lighting bill dropped by nearly ฿200/month for a 3-bedroom home.',th:'เปลี่ยนหลอดไฟทั้งบ้านเป็น LED ฟังดูธรรมดา แต่ค่าไฟส่วนของแสงสว่างลดลงเกือบ 200 บาท/เดือนในบ้าน 3 ห้องนอน'},
+  {en:'Got a smart plug for my water heater. Set it to run only 45 minutes before shower time. Bill dropped ฿400/month!',th:'ซื้อปลั๊กอัจฉริยะมาเสียบเครื่องทำน้ำอุ่น ตั้งให้เปิดแค่ 45 นาทีก่อนอาบน้ำ ค่าไฟลด 400 บาท/เดือน!'},
+  {en:'Cleaning the AC filter every 2 weeks makes a real difference. The unit runs more efficiently and the electric bill shows it.',th:'ล้างแผ่นกรองแอร์ทุก 2 สัปดาห์ ช่วยได้จริงๆ เครื่องทำงานมีประสิทธิภาพมากขึ้น และค่าไฟก็สะท้อนให้เห็น'},
+];
+
+// ── Toast ──────────────────────────────────────────────
+var _toastTimer=null;
+function showToast(msg,type){
+  var el=document.getElementById('toast');
+  var icon=document.getElementById('toastIcon');
+  document.getElementById('toastTxt').textContent=msg;
+  if(type==='error') icon.setAttribute('data-lucide','x-circle');
+  else icon.setAttribute('data-lucide','check-circle');
+  lucide.createIcons({nodes:[icon]});
+  el.classList.remove('translate-y-24','opacity-0');
+  el.classList.add('translate-y-0','opacity-100');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){ el.classList.add('translate-y-24','opacity-0'); el.classList.remove('translate-y-0','opacity-100'); },3000);
+}
+
+// ── Modal ──────────────────────────────────────────────
+function openModal(html){ var ov=document.getElementById('modalOverlay'); document.getElementById('modalBox').innerHTML=html; ov.classList.remove('hidden'); ov.classList.add('flex'); lucide.createIcons({nodes:[document.getElementById('modalBox')]}); }
+function closeModal(){ var ov=document.getElementById('modalOverlay'); ov.classList.add('hidden'); ov.classList.remove('flex'); }
+document.getElementById('modalOverlay').addEventListener('click',function(e){ if(e.target.id==='modalOverlay') closeModal(); });
+
+// ── LocalStorage ───────────────────────────────────────
+function saveLS(){
+  try{
+    localStorage.setItem('ae3-settings',JSON.stringify({lang:state.lang,currency:state.currency,unit:state.unit,theme:state.theme}));
+    localStorage.setItem('ae3-appliances',JSON.stringify({appliances:state.appliances,nextApId:state.nextApId}));
+    localStorage.setItem('ae3-tariff',JSON.stringify(state.tariff));
+    localStorage.setItem('ae3-sv',JSON.stringify(state.sv));
+    localStorage.setItem('ae3-billsim',JSON.stringify(state.billSim));
+    localStorage.setItem('ae3-handle',JSON.stringify({handle:state.handle,color:state.handleColor}));
+    localStorage.setItem('ae3-community',JSON.stringify(state.community));
+    localStorage.setItem('ae3-chat',JSON.stringify(state.chatHistory));
+    localStorage.setItem('ae3-lifestyle',JSON.stringify(state.lifestyle));
+  }catch(e){}
+}
+function loadLS(){
+  try{
+    var s=JSON.parse(localStorage.getItem('ae3-settings')||'null');
+    if(s){state.lang=s.lang||'en';state.currency=s.currency||'THB';state.unit=s.unit||'kWh';state.theme=s.theme||'light';}
+    var a=JSON.parse(localStorage.getItem('ae3-appliances')||'null');
+    if(a){state.appliances=a.appliances||[];state.nextApId=a.nextApId||1;}
+    var tr=JSON.parse(localStorage.getItem('ae3-tariff')||'null');
+    if(tr){
+      if(tr.tiers) tr.tiers.forEach(function(tier){if(tier.max===null||tier.max===undefined||tier.max>999998)tier.max=999999;});
+      state.tariff=tr;
+    }
+    var sv=JSON.parse(localStorage.getItem('ae3-sv')||'null');
+    if(sv) state.sv=Object.assign(state.sv,sv);
+    var bs=JSON.parse(localStorage.getItem('ae3-billsim')||'null');
+    if(bs) state.billSim=bs;
+    var h=JSON.parse(localStorage.getItem('ae3-handle')||'null');
+    if(h&&h.handle){state.handle=h.handle;state.handleColor=h.color;}
+    else{state.handle=genHandle();state.handleColor=colorForHandle(state.handle);}
+    var c=JSON.parse(localStorage.getItem('ae3-community')||'null');
+    if(c) state.community=c;
+    var ch=JSON.parse(localStorage.getItem('ae3-chat')||'null');
+    if(ch) state.chatHistory=ch;
+    var ls=JSON.parse(localStorage.getItem('ae3-lifestyle')||'null');
+    if(ls) state.lifestyle=Object.assign(state.lifestyle,ls);
+  }catch(e){state.handle=genHandle();state.handleColor=colorForHandle(state.handle);}
+}
+
+// ── Theme ──────────────────────────────────────────────
+function applyTheme(theme){
+  state.theme=theme||'light';
+  var dark=state.theme==='dark';
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  var icon=document.getElementById('themeIcon');
+  if(icon){ icon.setAttribute('data-lucide',dark?'sun':'moon'); lucide.createIcons({nodes:[icon]}); }
+  saveLS();
+  // Rebuild active charts with new colors
+  var sec=state.activeSec;
+  if(sec==='dashboard'){
+    var r=getApplianceResults();
+    var bill=r.tariff.total, kwh=r.totalKwh;
+    buildTrendChart(monthLabels(6),trendData(bill));
+    buildRiskChart(bill>4500?'high':bill>2200?'med':'low',bill);
+    if(kwh>0&&r.items.length>0) buildBreakChart(r.items);
+  }
+  if(sec==='smartvolt'&&state.profile) updateSvCharts();
+}
+document.getElementById('themeToggle').addEventListener('click',function(){
+  applyTheme(isDarkMode()?'light':'dark');
+});
+
+// ── Segmented Controls ─────────────────────────────────
+function initSeg(id,group,current){
+  var el=document.getElementById(id);
+  var btns=[].slice.call(el.querySelectorAll('.seg-btn'));
+  function reposition(){
+    var active=el.querySelector('.seg-btn.active')||btns[0];
+    var pill=el.querySelector('.seg-pill');
+    pill.style.width=active.offsetWidth+'px';
+    pill.style.transform='translateX('+(active.offsetLeft-3)+'px)';
+  }
+  btns.forEach(function(b){
+    if(b.getAttribute('data-val')===current) b.classList.add('active');
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      reposition();
+      onToggle(group,b.getAttribute('data-val'));
+    });
+  });
+  setTimeout(reposition,60);
+  window.addEventListener('resize',reposition);
+}
+function onToggle(group,val){
+  if(group==='lang'){state.lang=val;document.documentElement.lang=val;}
+  if(group==='currency') state.currency=val;
+  if(group==='unit') state.unit=val;
+  saveLS();
+  renderEverything();
+}
+
+// ── Navigation ─────────────────────────────────────────
+function navigateTo(sec){
+  state.activeSec=sec;
+  document.querySelectorAll('.section').forEach(function(el){el.classList.add('hidden');});
+  var el=document.getElementById('sec-'+sec);
+  if(el){el.classList.remove('hidden');}
+  document.querySelectorAll('.nav-link').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-sec')===sec);});
+  var isHero=sec==='hero';
+  document.getElementById('mainNav').classList.toggle('hidden',isHero);
+  document.getElementById('mainNav').classList.toggle('lg:flex',!isHero);
+  document.getElementById('enterAppBtn').classList.toggle('hidden',!isHero);
+  document.getElementById('ecobotFab').classList.toggle('hidden',isHero);
+  // Mobile bottom tab bar: hide on landing, sync active section
+  document.getElementById('mobileTabBar').classList.toggle('hidden',isHero);
+  document.querySelectorAll('.mtab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-sec')===sec);});
+  // Declutter: currency/unit toggles are in-app settings — hide them on the landing
+  document.getElementById('segCurrency').classList.toggle('hidden',isHero);
+  document.getElementById('segUnit').classList.toggle('hidden',isHero);
+  // Reposition seg pills now that their visibility changed
+  window.dispatchEvent(new Event('resize'));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(typeof onSection==='function') onSection(sec);
+}
+document.querySelectorAll('.nav-link').forEach(function(a){
+  a.addEventListener('click',function(e){e.preventDefault();navigateTo(a.getAttribute('data-sec'));});
+});
+document.querySelectorAll('.mtab').forEach(function(b){
+  b.addEventListener('click',function(){navigateTo(b.getAttribute('data-sec'));});
+});
+// Bill Analyzer bindings
+(function(){
+  var drop=document.getElementById('baDrop'), file=document.getElementById('baFile');
+  if(drop&&file){
+    drop.addEventListener('click',function(){file.click();});
+    file.addEventListener('change',function(){ if(file.files&&file.files[0]) baReadFile(file.files[0]); });
+    ['dragover','dragenter'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('drag');});});
+    ['dragleave','dragend'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('drag');});});
+    drop.addEventListener('drop',function(e){ e.preventDefault(); drop.classList.remove('drag'); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) baReadFile(f); });
+  }
+  var clr=document.getElementById('baClearFile'); if(clr) clr.addEventListener('click',function(e){e.stopPropagation();baClearFile();});
+  var btn=document.getElementById('baAnalyzeBtn'); if(btn) btn.addEventListener('click',analyzeBill);
+})();
+document.getElementById('logoBtn').addEventListener('click',function(){navigateTo('hero');});
+document.getElementById('enterAppBtn').addEventListener('click',function(){navigateTo('dashboard');});
+document.getElementById('heroStartBtn').addEventListener('click',function(){navigateTo('dashboard');});
+document.getElementById('heroSimBtn').addEventListener('click',function(){navigateTo('billsim');});
+document.getElementById('landCtaBtn').addEventListener('click',function(){navigateTo('dashboard');});
+document.querySelectorAll('.feat-pill').forEach(function(p){
+  p.addEventListener('click',function(){navigateTo(p.getAttribute('data-sec'));});
+});
+// Landing feature cards → navigate to their section
+document.querySelectorAll('[data-nav-sec]').forEach(function(c){
+  c.addEventListener('click',function(){navigateTo(c.getAttribute('data-nav-sec'));});
+});
+
+// ── Hero Slider ─────────────────────────────────────────
+function updateHeroSlider(){
+  var v=parseFloat(document.getElementById('heroSlider').value);
+  document.getElementById('heroSliderVal').textContent=money(v);
+  document.getElementById('heroSaveAmt').textContent=money(v*0.15);
+}
+document.getElementById('heroSlider').addEventListener('input',updateHeroSlider);
+
+// ── Apply i18n strings to static elements ───────────────
+function applyStrings(){
+  document.documentElement.setAttribute('data-lang', state.lang);
+  document.querySelectorAll('[data-i]').forEach(function(el){
+    var k=el.getAttribute('data-i');
+    el.textContent=t(k);
+  });
+  document.querySelectorAll('[data-i-ph]').forEach(function(el){
+    el.placeholder=t(el.getAttribute('data-i-ph'));
+  });
+  updateHeroSlider();
+}
+
+// ── renderEverything (called on toggle change) ──────────
+function renderEverything(){
+  applyStrings();
+  if(state.activeSec==='dashboard') renderDashboard();
+  if(state.activeSec==='appliances') renderAppliancesPage();
+  if(state.activeSec==='billsim') renderBillSim();
+  if(state.activeSec==='billanalyzer') renderBillAnalyzer();
+  if(state.activeSec==='smartvolt'&&state.profile) renderSvStrategy();
+  if(state.activeSec==='community') renderCommunity();
+  renderEcobot();
+}
+
+// ── onSection (called on navigation) ───────────────────
+function onSection(sec){
+  if(sec==='dashboard') renderDashboard();
+  if(sec==='appliances') renderAppliancesPage();
+  if(sec==='billsim') renderBillSim();
+  if(sec==='billanalyzer') renderBillAnalyzer();
+  if(sec==='smartvolt') renderSmartVoltPage();
+  if(sec==='community') renderCommunity();
+}
+
+// ── Ecobot Toggle ───────────────────────────────────────
+document.getElementById('ecobotToggle').addEventListener('click',function(){openEcobot();});
+document.getElementById('ecobotOpen').addEventListener('click',function(){openEcobot();});
+document.getElementById('ecobotClose').addEventListener('click',function(){closeEcobot();});
+function openEcobot(){
+  var panel=document.getElementById('ecobotPanel');
+  panel.classList.remove('closed');
+  document.getElementById('ecobotBadge').classList.add('hidden');
+  if(!state.chatBotSeeded){
+    state.chatBotSeeded=true;
+    addBotMsg(state.lang==='th'?'สวัสดีครับ! ผมคือ Ecobot ที่ปรึกษาพลังงาน AI ของคุณ ถามผมได้เลยว่าจะประหยัดค่าไฟได้อย่างไร':'Hi! I\'m Ecobot, your AI energy advisor. Ask me anything about saving on your electricity bill — tariffs, solar, appliance tips, you name it.');
+    renderQuickReplies();
+  }
+}
+function closeEcobot(){ document.getElementById('ecobotPanel').classList.add('closed'); }
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════
+function renderDashboard(){
+  var r=getApplianceResults();
+  var bill=r.tariff.total, kwh=r.totalKwh, savings=bill*0.15;
+  var h=document.getElementById('dashWelcomeTxt');
+  if(h) h.textContent=t('dashWelcome');
+  document.querySelectorAll('#sec-dashboard [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  var cards=document.getElementById('dashCards');
+  if(!cards) return;
+  var cd=[
+    {icon:'receipt',lbl:t('dashBill'),val:money(bill),sub:t('dashPerMonth'),grad:true},
+    {icon:'zap',lbl:t('dashUsage'),val:energy(kwh),sub:tf('dashBasedOn',{n:r.count}),grad:false},
+    {icon:'plug',lbl:t('dashAppliances'),val:r.count,sub:t('dashActive'),grad:false},
+    {icon:'trending-down',lbl:t('dashSavings'),val:money(savings),sub:t('dashOptimized'),grad:false},
+  ];
+  cards.innerHTML=cd.map(function(c){
+    var g=c.grad;
+    return '<div class="stat-card card-spring'+(g?' blue-grad':'')+'">'
+      +'<div class="flex items-center gap-2 mb-3"><div class="w-8 h-8 rounded-lg '+(g?'bg-white/20':'bg-navy-50')+' flex items-center justify-center">'
+      +'<i data-lucide="'+c.icon+'" class="icon-sm '+(g?'text-white':'text-navy-500')+'"></i></div>'
+      +'<span class="text-'+(g?'white/70':'navy-400')+' text-xs font-600">'+esc(c.lbl)+'</span></div>'
+      +'<p class="text-'+(g?'white':'navy-950')+' text-2xl font-900 mb-0.5">'+esc(String(c.val))+'</p>'
+      +'<p class="text-'+(g?'white/60':'navy-300')+' text-xs font-500">'+esc(c.sub)+'</p></div>';
+  }).join('');
+  var months=monthLabels(6), trendVals=trendData(bill);
+  buildTrendChart(months,trendVals);
+  var risk=bill>4500?'high':bill>2200?'med':'low';
+  buildRiskChart(risk,bill);
+  if(kwh>0&&r.items.length>0){
+    document.getElementById('dashBreakEmpty').classList.add('hidden');
+    document.getElementById('dashBreakChartWrap').classList.remove('hidden');
+    buildBreakChart(r.items);
+  } else {
+    document.getElementById('dashBreakEmpty').classList.remove('hidden');
+    document.getElementById('dashBreakChartWrap').classList.add('hidden');
+    if(state.charts.breakdown){state.charts.breakdown.destroy();state.charts.breakdown=null;}
+  }
+  var fc=document.getElementById('dashForecastContent');
+  if(fc){
+    var fv=bill*1.04;
+    fc.innerHTML='<div class="space-y-3">'
+      +'<div class="flex justify-between items-center p-3 bg-navy-50 rounded-xl"><span class="text-navy-600 text-sm font-600">'+t('svCurrentBill')+'</span><span class="text-navy-950 font-800">'+money(bill)+'</span></div>'
+      +'<div class="flex justify-between items-center p-3 bg-amber-50 rounded-xl border border-amber-100"><span class="text-amber-700 text-sm font-600">'+t('dashForecastTitle')+'</span><span class="text-amber-700 font-800">'+money(fv)+'</span></div>'
+      +'<div class="flex justify-between items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100"><span class="text-emerald-700 text-sm font-600">'+t('dashSavings')+'</span><span class="text-emerald-700 font-800">'+money(savings)+'</span></div>'
+      +'</div>';
+  }
+  document.querySelectorAll('#sec-dashboard [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  lucide.createIcons({nodes:[document.getElementById('sec-dashboard')]});
+}
+function monthLabels(n){
+  var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var moTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var now=new Date(),res=[];
+  for(var i=n-1;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);res.push(state.lang==='th'?moTH[d.getMonth()]:mo[d.getMonth()]);}
+  return res;
+}
+function trendData(cur){var v=[.84,.88,.94,.98,1.02,1];return v.map(function(x){return Math.round(cur*x);});}
+function buildTrendChart(labels,data){
+  if(state.charts.trend){state.charts.trend.destroy();state.charts.trend=null;}
+  var ctx=document.getElementById('trendChart'); if(!ctx) return;
+  state.charts.trend=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:t('dashBill'),data:data,borderColor:'#0F4C81',backgroundColor:'rgba(15,76,129,.07)',fill:true,tension:.45,pointBackgroundColor:'#0F4C81',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+money(c.parsed.y);}}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11,family:chartFontFamily()},color:chartTextColor()}},y:{grid:{color:chartGridColor()},ticks:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),callback:function(v){return SYM[state.currency]+Math.round(v*FX[state.currency]).toLocaleString();}}}}}});
+}
+function buildRiskChart(risk,bill){
+  if(state.charts.risk){state.charts.risk.destroy();state.charts.risk=null;}
+  var ctx=document.getElementById('riskChart'); if(!ctx) return;
+  var cols={low:['#22c55e','#f0fdf4'],med:['#f59e0b','#fffbeb'],high:['#ef4444','#fef2f2']};
+  var pcts={low:30,med:62,high:95};
+  state.charts.risk=new Chart(ctx,{type:'doughnut',data:{labels:['',''],datasets:[{data:[pcts[risk],100-pcts[risk]],backgroundColor:cols[risk],borderWidth:0,circumference:180,rotation:-90}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:'74%'}});
+  var lbl=document.getElementById('riskLabel'),sub=document.getElementById('riskSub');
+  var rcl={low:'text-emerald-600',med:'text-amber-500',high:'text-red-500'};
+  var rtxt={low:t('riskLow'),med:t('riskMed'),high:t('riskHigh')};
+  if(lbl){lbl.textContent=rtxt[risk];lbl.className='font-800 text-sm '+rcl[risk];}
+  if(sub){sub.textContent=money(bill)+t('perMonth');}
+}
+function buildBreakChart(items){
+  if(state.charts.breakdown){state.charts.breakdown.destroy();state.charts.breakdown=null;}
+  var ctx=document.getElementById('breakChart'); if(!ctx) return;
+  var cats={};
+  items.forEach(function(a){if(!cats[a.cat])cats[a.cat]=0;cats[a.cat]+=a.kwh;});
+  var ks=Object.keys(cats);
+  var lbls=ks.map(function(c){return pick(CAT_LABELS[c]||{en:c,th:c});});
+  var vals=ks.map(function(c){return cats[c];});
+  var cols=ks.map(function(c){return CAT_COLORS[CATS.indexOf(c)%CAT_COLORS.length]||'#99C3FF';});
+  state.charts.breakdown=new Chart(ctx,{type:'doughnut',data:{labels:lbls,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),padding:10,usePointStyle:true,pointStyleWidth:7}},
+        tooltip:{callbacks:{label:function(c){var tot=c.dataset.data.reduce(function(a,b){return a+b;},0);return ' '+energy(c.parsed)+' ('+Math.round(c.parsed/tot*100)+'%)';}}}}}});
+}
+
+// ══════════════════════════════════════════════════════
+// APPLIANCES
+// ══════════════════════════════════════════════════════
+var _apCatFilter='all';
+function renderAppliancesPage(){
+  document.querySelectorAll('#sec-appliances [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  // Category filter
+  var cf=document.getElementById('apCatFilter');
+  if(cf){
+    var allCats=['all'].concat(CATS.filter(function(c){return state.appliances.some(function(a){return a.cat===c;});}));
+    cf.innerHTML=allCats.map(function(c){
+      var isAll=(c==='all'),lbl=isAll?(state.lang==='th'?'ทั้งหมด':'All'):pick(CAT_LABELS[c]||{en:c,th:c});
+      var act=(_apCatFilter===c);
+      return '<button onclick="setApCat(\''+c+'\')" class="px-4 py-1.5 rounded-xl text-xs font-700 border transition-all duration-200 '+(act?'bg-navy-500 text-white border-navy-500 shadow':'bg-white text-navy-500 border-navy-200 hover:border-navy-400 hover:bg-navy-50')+'">'+esc(lbl)+'</button>';
+    }).join('');
+  }
+  var filtered=_apCatFilter==='all'?state.appliances:state.appliances.filter(function(a){return a.cat===_apCatFilter;});
+  var list=document.getElementById('apList');
+  var empty=document.getElementById('apEmpty');
+  if(!list) return;
+  var r=getApplianceResults();
+  var totalBillEl=document.getElementById('apTotalBill');
+  var totalKwhEl=document.getElementById('apTotalKwh');
+  if(totalBillEl) totalBillEl.textContent=money(r.tariff.total);
+  if(totalKwhEl) totalKwhEl.textContent=energy(r.totalKwh);
+  if(!filtered.length){list.innerHTML='';empty.classList.remove('hidden');}
+  else{
+    empty.classList.add('hidden');
+    list.innerHTML=filtered.map(function(a){
+      var kwhA=appKwh(a);
+      var cost=calcTariff(kwhA).total*a.enabled;
+      var preset=APPLIANCE_PRESETS[a.name]||APPLIANCE_PRESETS['Other'];
+      var icon=preset.icon||'plug';
+      return '<div class="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm card-spring relative group animate-pop-in">'
+        +'<div class="flex items-start justify-between mb-3">'
+        +'<div class="flex items-center gap-3">'
+        +'<div class="w-10 h-10 rounded-xl bg-navy-50 flex items-center justify-center flex-shrink-0"><i data-lucide="'+icon+'" class="icon-md text-navy-500"></i></div>'
+        +'<div><p class="text-navy-950 font-800 text-sm leading-tight">'+esc(a.name)+'</p>'
+        +'<p class="text-navy-300 text-xs font-500 mt-0.5">'+esc(pick(CAT_LABELS[a.cat]||{en:a.cat,th:a.cat}))+'</p></div></div>'
+        +'<div class="flex items-center gap-1.5">'
+        +'<button onclick="toggleAp('+a.id+')" class="w-8 h-8 rounded-lg '+(a.enabled?'bg-navy-500 text-white':'bg-navy-50 text-navy-300')+' flex items-center justify-center transition-all duration-200">'
+        +'<i data-lucide="'+(a.enabled?'toggle-right':'toggle-left')+'" class="icon-sm"></i></button>'
+        +'<button onclick="openApModal('+a.id+')" class="w-8 h-8 rounded-lg bg-navy-50 text-navy-400 hover:bg-navy-100 flex items-center justify-center transition-colors">'
+        +'<i data-lucide="edit-2" class="icon-xs"></i></button>'
+        +'<button onclick="deleteAp('+a.id+')" class="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 flex items-center justify-center transition-colors">'
+        +'<i data-lucide="trash-2" class="icon-xs"></i></button>'
+        +'</div></div>'
+        +'<div class="grid grid-cols-3 gap-2 mb-3">'
+        +'<div class="bg-navy-50 rounded-lg p-2 text-center"><p class="text-navy-300 text-[10px] font-600">'+t('apWatts')+'</p><p class="text-navy-950 font-800 text-sm">'+a.watts+'W</p></div>'
+        +'<div class="bg-navy-50 rounded-lg p-2 text-center"><p class="text-navy-300 text-[10px] font-600">'+t('apHours')+'</p><p class="text-navy-950 font-800 text-sm">'+a.hours+'h</p></div>'
+        +'<div class="bg-navy-50 rounded-lg p-2 text-center"><p class="text-navy-300 text-[10px] font-600">'+t('apQty')+'</p><p class="text-navy-950 font-800 text-sm">x'+a.qty+'</p></div>'
+        +'</div>'
+        +'<div class="flex items-center justify-between pt-3 border-t border-navy-50">'
+        +'<span class="text-navy-300 text-xs font-600">'+energy(kwhA)+t('perMonth')+'</span>'
+        +'<span class="text-navy-950 font-900 text-base">'+money(cost)+t('perMonth')+'</span>'
+        +'</div></div>';
+    }).join('');
+  }
+  lucide.createIcons({nodes:[document.getElementById('sec-appliances')]});
+}
+function setApCat(c){_apCatFilter=c;renderAppliancesPage();}
+function toggleAp(id){
+  var a=state.appliances.find(function(x){return x.id===id;});
+  if(a){a.enabled=!a.enabled;saveLS();renderAppliancesPage();}
+}
+function deleteAp(id){
+  state.appliances=state.appliances.filter(function(x){return x.id!==id;});
+  saveLS();showToast(t('apDeleted'));renderAppliancesPage();
+  if(state.activeSec==='dashboard') renderDashboard();
+}
+function openApModal(id){
+  var a=id?state.appliances.find(function(x){return x.id===id;}):null;
+  var isEdit=!!a;
+  var presetNames=Object.keys(APPLIANCE_PRESETS);
+  var catOpts=CATS.map(function(c){return '<option value="'+c+'"'+(a&&a.cat===c?' selected':'')+'>'+esc(pick(CAT_LABELS[c]||{en:c,th:c}))+'</option>';}).join('');
+  var presetOpts=presetNames.map(function(n){return '<option value="'+esc(n)+'"'+(a&&a.name===n?' selected':'')+'>'+esc(n)+'</option>';}).join('');
+  var html='<div class="p-6">'
+    +'<div class="flex items-center justify-between mb-5">'
+    +'<div><h3 class="text-navy-950 font-900 text-lg">'+t(isEdit?'apEditTitle':'apAddTitle')+'</h3>'
+    +'<p class="text-navy-400 text-xs mt-0.5">'+t('apModalSub')+'</p></div>'
+    +'<button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-navy-50 text-navy-400 hover:bg-navy-100 flex items-center justify-center"><i data-lucide="x" class="icon-sm"></i></button>'
+    +'</div>'
+    +'<div class="space-y-4">'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5">Appliance Name</label>'
+    +'<select id="modalPreset" onchange="onPresetChange()" class="w-full border border-navy-200 rounded-xl px-4 py-3 text-navy-950 font-600 text-sm bg-navy-50 focus:border-navy-500 transition-colors">'+presetOpts+'</select></div>'
+    +'<div class="grid grid-cols-3 gap-3">'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5">'+t('apWatts')+'</label>'
+    +'<input type="number" id="modalWatts" min="1" max="20000" value="'+(a?a.watts:100)+'" class="w-full border border-navy-200 rounded-xl px-3 py-3 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors" oninput="updateModalPreview()"/></div>'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5">'+t('apQty')+'</label>'
+    +'<input type="number" id="modalQty" min="1" max="50" value="'+(a?a.qty:1)+'" class="w-full border border-navy-200 rounded-xl px-3 py-3 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors" oninput="updateModalPreview()"/></div>'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5">'+t('apHours')+'</label>'
+    +'<input type="number" id="modalHours" min=".5" max="24" step=".5" value="'+(a?a.hours:4)+'" class="w-full border border-navy-200 rounded-xl px-3 py-3 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors" oninput="updateModalPreview()"/></div>'
+    +'</div>'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5">'+t('apCategory')+'</label>'
+    +'<select id="modalCat" class="w-full border border-navy-200 rounded-xl px-4 py-3 text-navy-950 font-600 text-sm bg-navy-50 focus:border-navy-500 transition-colors">'+catOpts+'</select></div>'
+    +'<div id="modalPreview" class="bg-gradient-to-r from-navy-500 to-navy-400 rounded-xl p-4 text-white text-center">'
+    +'<p class="text-xs font-600 text-white/70 mb-0.5">'+t('apPreview')+'</p>'
+    +'<p id="modalPreviewAmt" class="text-2xl font-900"></p>'
+    +'<p class="text-xs text-white/70 mt-0.5">'+t('perMonth')+'</p>'
+    +'</div>'
+    +'</div>'
+    +'<div class="flex gap-3 mt-6">'
+    +'<button onclick="closeModal()" class="flex-1 border-2 border-navy-200 text-navy-500 font-700 py-3 rounded-xl hover:bg-navy-50 transition-colors">'+t('cancel')+'</button>'
+    +'<button onclick="saveAp('+(isEdit?id:'null')+')" class="flex-1 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 py-3 rounded-xl hover:shadow-md transition-all">'+t(isEdit?'apUpdate':'apAdd')+'</button>'
+    +'</div></div>';
+  openModal(html);
+  updateModalPreview();
+}
+function onPresetChange(){
+  var sel=document.getElementById('modalPreset');
+  if(!sel) return;
+  var preset=APPLIANCE_PRESETS[sel.value];
+  if(preset){
+    var w=document.getElementById('modalWatts');
+    var c=document.getElementById('modalCat');
+    if(w) w.value=preset.watts;
+    if(c) c.value=preset.cat;
+  }
+  updateModalPreview();
+}
+function updateModalPreview(){
+  var w=parseFloat(document.getElementById('modalWatts').value)||100;
+  var q=parseFloat(document.getElementById('modalQty').value)||1;
+  var h=parseFloat(document.getElementById('modalHours').value)||4;
+  var kwh=(w*h*30*q)/1000;
+  var cost=calcTariff(kwh).total;
+  var el=document.getElementById('modalPreviewAmt');
+  if(el) el.textContent=money(cost);
+}
+function saveAp(id){
+  var name=document.getElementById('modalPreset').value;
+  var watts=parseFloat(document.getElementById('modalWatts').value)||0;
+  var qty=parseFloat(document.getElementById('modalQty').value)||1;
+  var hours=parseFloat(document.getElementById('modalHours').value)||1;
+  var cat=document.getElementById('modalCat').value;
+  if(!watts||watts<1) return;
+  if(id){
+    var a=state.appliances.find(function(x){return x.id===id;});
+    if(a){Object.assign(a,{name:name,watts:watts,qty:qty,hours:hours,cat:cat});}
+    showToast(t('apUpdated'));
+  } else {
+    state.appliances.push({id:state.nextApId++,name:name,watts:watts,qty:qty,hours:hours,cat:cat,enabled:true});
+    showToast(t('apAdded'));
+  }
+  saveLS();closeModal();renderAppliancesPage();
+  if(state.activeSec==='dashboard') renderDashboard();
+}
+
+// ══════════════════════════════════════════════════════
+// BILL SIMULATOR
+// ══════════════════════════════════════════════════════
+function renderBillSim(){
+  document.querySelectorAll('#sec-billsim [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  renderTariffConfig();
+  var kwh=state.billSim.kwh;
+  var kwhEl=document.getElementById('bsKwh');
+  var slEl=document.getElementById('bsKwhSlider');
+  if(kwhEl) kwhEl.value=kwh;
+  if(slEl) slEl.value=kwh;
+  if(kwhEl) kwhEl.addEventListener('input',function(){state.billSim.kwh=parseFloat(this.value)||0;if(slEl)slEl.value=this.value;saveLS();},true);
+  if(slEl) slEl.addEventListener('input',function(){state.billSim.kwh=parseFloat(this.value)||0;if(kwhEl)kwhEl.value=this.value;saveLS();},true);
+  lucide.createIcons({nodes:[document.getElementById('sec-billsim')]});
+}
+function renderTariffConfig(){
+  var cf=document.getElementById('bsConfigFields'); if(!cf) return;
+  var T=state.tariff;
+  var fields=[
+    {id:'cfT1Rate',label:t('bsTier1Rate'),val:T.tiers[0].rate,step:.0001},
+    {id:'cfT2Rate',label:t('bsTier2Rate'),val:T.tiers[1].rate,step:.0001},
+    {id:'cfT3Rate',label:t('bsTier3Rate'),val:T.tiers[2].rate,step:.0001},
+    {id:'cfFt',label:t('bsFtDefault'),val:T.ft,step:.0001},
+    {id:'cfService',label:t('bsServiceFeeLabel'),val:T.serviceFee,step:.01},
+    {id:'cfVat',label:t('bsVatPctLabel'),val:T.vatPct,step:1},
+  ];
+  cf.innerHTML=fields.map(function(f){
+    return '<div class="flex items-center justify-between gap-4">'
+      +'<label class="text-navy-600 text-xs font-600 flex-1">'+esc(f.label)+'</label>'
+      +'<input type="number" id="'+f.id+'" value="'+f.val+'" step="'+f.step+'" class="w-28 border border-navy-200 rounded-xl px-3 py-2 text-navy-950 font-700 text-sm text-right bg-navy-50 focus:border-navy-500 transition-colors"/>'
+      +'</div>';
+  }).join('');
+}
+function saveTariffConfig(){
+  var v=function(id){return parseFloat(document.getElementById(id).value)||0;};
+  state.tariff.tiers[0].rate=v('cfT1Rate');
+  state.tariff.tiers[1].rate=v('cfT2Rate');
+  state.tariff.tiers[2].rate=v('cfT3Rate');
+  state.tariff.ft=v('cfFt');
+  state.tariff.serviceFee=v('cfService');
+  state.tariff.vatPct=v('cfVat');
+  saveLS();showToast(t('bsConfigSaved'));
+}
+function resetTariff(){
+  state.tariff=JSON.parse(JSON.stringify(DEFAULT_TARIFF));
+  saveLS();renderTariffConfig();showToast(t('bsConfigSaved'));
+}
+function calcBillSim(){
+  var kwh=parseFloat(document.getElementById('bsKwh').value)||0;
+  state.billSim.kwh=kwh;saveLS();
+  var r=calcTariff(kwh);
+  var rc=document.getElementById('bsResultCard');
+  var amt=document.getElementById('bsTotalAmt');
+  var bd=document.getElementById('bsBreakdown');
+  if(!rc||!amt||!bd) return;
+  rc.classList.remove('hidden');
+  amt.textContent=money(r.total);
+  var rows=[
+    {label:t('bsBaseLbl'),val:money(r.base)},
+    {label:t('bsFtCostLbl')+' ('+state.tariff.ft+' ฿/kWh)',val:money(r.ftCost)},
+    {label:t('bsServiceLbl'),val:money(r.serviceFee)},
+    {label:t('bsVatLbl'),val:money(r.vat)},
+  ];
+  bd.innerHTML=rows.map(function(row){
+    return '<div class="flex justify-between items-center text-white/90 text-sm">'
+      +'<span class="font-500 text-white/70">'+esc(row.label)+'</span>'
+      +'<span class="font-700">'+esc(row.val)+'</span></div>';
+  }).join('');
+  // Tier table
+  var tc=document.getElementById('bsTierCard');
+  var tt=document.getElementById('bsTierTable');
+  if(tc&&tt){
+    tc.classList.remove('hidden');
+    var T=state.tariff;
+    tt.innerHTML='<table class="w-full text-sm">'
+      +'<thead><tr class="text-navy-400 text-xs font-700 border-b border-navy-100">'
+      +'<th class="text-left pb-2 font-700">'+t('bsTierRange')+'</th>'
+      +'<th class="text-right pb-2 font-700">'+t('bsTierRate')+'</th>'
+      +'<th class="text-right pb-2 font-700">'+t('bsTierUnits')+'</th>'
+      +'<th class="text-right pb-2 font-700">'+t('bsTierCost')+'</th></tr></thead>'
+      +'<tbody>'+r.breakdown.map(function(row){
+        return '<tr class="border-b border-navy-50 last:border-0">'
+          +'<td class="py-3 text-navy-600 font-600">'+(row.from)+'–'+(row.to||'∞')+' kWh</td>'
+          +'<td class="py-3 text-right text-navy-600 font-600">฿'+row.rate+'</td>'
+          +'<td class="py-3 text-right text-navy-950 font-700">'+row.kwh.toFixed(1)+'</td>'
+          +'<td class="py-3 text-right text-navy-950 font-800">'+money(row.cost)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+    document.querySelectorAll('#bsTierCard [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  }
+  showToast(t('bsCalculated'));
+  lucide.createIcons({nodes:[document.getElementById('sec-billsim')]});
+}
+
+// ══════════════════════════════════════════════════════
+// SMARTVOLT
+// ══════════════════════════════════════════════════════
+function renderSmartVoltPage(){
+  document.querySelectorAll('#sec-smartvolt [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  renderLifestyleCard();
+  if(state.profile){
+    document.getElementById('svChooser').classList.add('hidden');
+    document.getElementById('svStrategy').classList.remove('hidden');
+    renderSvStrategy();
+  } else {
+    document.getElementById('svChooser').classList.remove('hidden');
+    document.getElementById('svStrategy').classList.add('hidden');
+    renderSvProfiles();
+  }
+}
+function renderLifestyleCard(){
+  var el=document.getElementById('svLifestyle'); if(!el) return;
+  var ls=state.lifestyle;
+  var occOpts=[
+    {val:'',key:'svOccNone'},{val:'wfh',key:'svOccWfh'},{val:'office',key:'svOccOffice'},
+    {val:'student',key:'svOccStudent'},{val:'retired',key:'svOccRetired'},{val:'business',key:'svOccBusiness'}
+  ];
+  var flags=[
+    {id:'acAllDay',key:'svFlagAcAllDay'},{id:'gaming',key:'svFlagGaming'},
+    {id:'waterHeater',key:'svFlagWaterHeater'},{id:'nightOwl',key:'svFlagNightOwl'},
+    {id:'multipleAC',key:'svFlagMultipleAC'}
+  ];
+  var hasSignals=ls.occupation||Object.values(ls.flags).some(function(v){return v;});
+  el.innerHTML='<div class="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">'
+    +'<div class="flex items-center gap-2 mb-4">'
+    +'<i data-lucide="user-cog" class="icon-sm text-navy-500"></i>'
+    +'<h3 class="text-navy-950 font-800 text-sm flex-1" data-i="svLifestyleTitle"></h3>'
+    +(hasSignals?'<span class="text-xs text-emerald-600 font-700 flex items-center gap-1"><i data-lucide="check-circle" class="icon-xs"></i><span data-i="svLifestyleSaved"></span></span>':'')
+    +'</div>'
+    +'<div class="grid sm:grid-cols-2 gap-4 mb-4">'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5" data-i="svOccupation"></label>'
+    +'<select id="svOccSel" class="w-full border border-navy-200 rounded-xl px-3 py-2.5 text-navy-950 text-sm font-600 bg-navy-50 focus:border-navy-500 transition-colors">'
+    +occOpts.map(function(o){return '<option value="'+esc(o.val)+'"'+(ls.occupation===o.val?' selected':'')+'>'+esc(t(o.key))+'</option>';}).join('')
+    +'</select></div>'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-1.5" data-i="svHouseholdSizeLbl"></label>'
+    +'<input type="number" id="svHouseInput" min="1" max="10" value="'+esc(String(ls.householdSize))+'" class="w-full border border-navy-200 rounded-xl px-3 py-2.5 text-navy-950 text-sm font-700 bg-navy-50 focus:border-navy-500 transition-colors"/>'
+    +'</div></div>'
+    +'<div><label class="block text-navy-600 text-xs font-700 mb-2" data-i="svBehaviorLabel"></label>'
+    +'<div class="flex flex-wrap gap-2">'
+    +flags.map(function(f){
+      var checked=ls.flags[f.id];
+      return '<label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border text-xs font-600 transition-all duration-200 '+(checked?'bg-navy-500 text-white border-navy-500':'bg-navy-50 text-navy-600 border-navy-200 hover:border-navy-400')+'">'
+        +'<input type="checkbox" class="sr-only" id="svFlag-'+f.id+'"'+(checked?' checked':'')+'>'
+        +(checked?'<i data-lucide="check" class="icon-xs"></i>':'<i data-lucide="square" class="icon-xs"></i>')
+        +'<span data-i="'+f.key+'"></span></label>';
+    }).join('')
+    +'</div></div>'
+    +(hasSignals?'<p class="text-xs text-emerald-600 font-600 mt-3 flex items-center gap-1"><i data-lucide="sparkles" class="icon-xs"></i><span data-i="svLifestyleImpact"></span></p>':'')
+    +'</div>';
+  // Apply i18n to newly rendered elements
+  document.querySelectorAll('#svLifestyle [data-i]').forEach(function(e){e.textContent=t(e.getAttribute('data-i'));});
+  lucide.createIcons({nodes:[document.getElementById('svLifestyle')]});
+  // Wire events
+  var occSel=document.getElementById('svOccSel');
+  var houseInput=document.getElementById('svHouseInput');
+  if(occSel) occSel.addEventListener('change',saveLifestyle);
+  if(houseInput) houseInput.addEventListener('change',saveLifestyle);
+  flags.forEach(function(f){
+    var cb=document.getElementById('svFlag-'+f.id);
+    if(cb) cb.addEventListener('change',saveLifestyle);
+  });
+}
+
+function saveLifestyle(){
+  var occSel=document.getElementById('svOccSel');
+  var houseInput=document.getElementById('svHouseInput');
+  if(occSel) state.lifestyle.occupation=occSel.value;
+  if(houseInput) state.lifestyle.householdSize=Math.max(1,Math.min(10,parseInt(houseInput.value)||3));
+  ['acAllDay','gaming','waterHeater','nightOwl','multipleAC'].forEach(function(id){
+    var cb=document.getElementById('svFlag-'+id);
+    if(cb) state.lifestyle.flags[id]=cb.checked;
+  });
+  saveLS();
+  renderLifestyleCard();
+  if(state.profile){ updateSvMetrics(); updateSvCharts(); renderSvTabs(); }
+}
+
+function renderSvProfiles(){
+  var grid=document.getElementById('svProfileGrid'); if(!grid) return;
+  grid.innerHTML=Object.keys(PROFILES).map(function(k){
+    var p=PROFILES[k];
+    return '<button onclick="selectProfile(\''+k+'\')" class="bg-white rounded-2xl p-6 border-2 border-navy-100 shadow-sm card-spring text-left hover:border-navy-300 transition-all duration-300 animate-pop-in">'
+      +'<div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center mb-4 shadow-md">'
+      +'<i data-lucide="'+p.icon+'" class="icon-md text-white"></i></div>'
+      +'<p class="text-navy-950 font-900 text-base mb-1">'+esc(pick(p.name))+'</p>'
+      +'<p class="text-navy-400 text-xs leading-relaxed">'+esc(pick(p.desc))+'</p>'
+      +'<div class="mt-4 flex items-center justify-between">'
+      +'<span class="text-navy-300 text-xs font-600">'+t('dashUsage')+'</span>'
+      +'<span class="text-navy-950 font-800 text-sm">'+energy(p.defaultKwh)+t('perMonth')+'</span>'
+      +'</div></button>';
+  }).join('');
+  lucide.createIcons({nodes:[document.getElementById('svProfileGrid')]});
+}
+function selectProfile(k){
+  state.profile=k;
+  state.sv.usageKwh=PROFILES[k].defaultKwh;
+  saveLS();renderSmartVoltPage();
+}
+function resetSvProfile(){
+  state.profile=null;saveLS();renderSmartVoltPage();
+}
+function renderSvStrategy(){
+  var p=PROFILES[state.profile]; if(!p) return;
+  document.querySelectorAll('#sec-smartvolt [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  // Profile header
+  var icon=document.getElementById('svProfileIcon');
+  if(icon) icon.setAttribute('data-lucide',p.icon);
+  var nm=document.getElementById('svProfileName');
+  if(nm) nm.textContent=pick(p.name);
+  // Slider
+  var sl=document.getElementById('svSlider');
+  if(sl){
+    sl.value=state.sv.usageKwh;
+    sl.oninput=function(){state.sv.usageKwh=parseInt(this.value);saveLS();updateSvMetrics();updateSvCharts();updateSvTabContent();if(state.sv.aiShown)svRenderAnalysis(false);};
+  }
+  var minL=document.getElementById('svSliderMinLbl'),maxL=document.getElementById('svSliderMaxLbl');
+  if(minL) minL.textContent=energy(50)+t('perMonth');
+  if(maxL) maxL.textContent=energy(1500)+t('perMonth');
+  updateSvMetrics();
+  updateSvCharts();
+  renderSvTabs();
+  var aiBtn=document.getElementById('svAiBtn');
+  if(aiBtn) aiBtn.onclick=function(){state.sv.aiShown=true;saveLS();svRenderAnalysis(true);};
+  if(state.sv.aiShown){ svRenderAnalysis(false); }
+  else { var r=document.getElementById('svAiResult'); if(r) r.classList.add('hidden'); }
+  lucide.createIcons({nodes:[document.getElementById('sec-smartvolt')]});
+}
+// ── SmartVolt AI deep analysis (built-in, no chatbot) ───
+function svAnalyze(){
+  var kwh=state.sv.usageKwh;
+  var bill=calcTariff(kwh).total;
+  var ls=state.lifestyle||{}, f=ls.flags||{}, occ=ls.occupation;
+  var avg=400, pctVsAvg=Math.round((kwh/avg-1)*100);
+  var level=kwh>avg*1.25?'high':(kwh<avg*0.8?'low':'normal');
+  var ar=getApplianceResults(), topCat=null;
+  if(ar.totalKwh>0&&ar.items.length){
+    var byCat={}; ar.items.forEach(function(it){var c=it.cat||'appliances';byCat[c]=(byCat[c]||0)+it.kwh;});
+    topCat=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a];})[0];
+  }
+  var findings=[];
+  findings.push({ic:'calendar',en:'Projected annual cost about '+money(bill*12)+' at this usage.',th:'ค่าไฟทั้งปีประมาณ '+money(bill*12)+' ที่อัตราการใช้นี้'});
+  if(pctVsAvg>5) findings.push({ic:'trending-up',en:'You use about '+pctVsAvg+'% more than a typical Thai household ('+energy(avg)+').',th:'คุณใช้ไฟมากกว่าครัวเรือนไทยทั่วไปประมาณ '+pctVsAvg+'% (เฉลี่ย '+energy(avg)+')'});
+  else if(pctVsAvg<-5) findings.push({ic:'trending-down',en:'You use about '+Math.abs(pctVsAvg)+'% less than a typical household — efficient!',th:'คุณใช้ไฟน้อยกว่าครัวเรือนทั่วไปประมาณ '+Math.abs(pctVsAvg)+'% — ประหยัดดีมาก!'});
+  else findings.push({ic:'minus',en:'Your usage is close to the typical household average.',th:'การใช้ไฟของคุณใกล้เคียงค่าเฉลี่ยครัวเรือนไทย'});
+  if(topCat) findings.push({ic:BA_CAT_ICON[topCat]||'plug',en:pick(CAT_LABELS[topCat])+' is your single biggest electricity cost.',th:pick(CAT_LABELS[topCat])+' คือค่าไฟก้อนใหญ่ที่สุดของคุณ'});
+  if(f.acAllDay) findings.push({ic:'wind',en:'Running AC all day is a major driver — scheduling it could cut 8–12%.',th:'เปิดแอร์ทั้งวันเป็นตัวกินไฟหลัก — ตั้งเวลาช่วยลดได้ 8–12%'});
+  if(f.waterHeater) findings.push({ic:'flame',en:'Your water heater draws high power — limiting runtime saves noticeably.',th:'เครื่องทำน้ำอุ่นกินไฟสูง — จำกัดเวลาใช้ช่วยประหยัดได้ชัดเจน'});
+  if(occ==='wfh') findings.push({ic:'home',en:'Working from home raises your daytime cooling load.',th:'ทำงานที่บ้านทำให้โหลดแอร์กลางวันสูงขึ้น'});
+  findings=findings.slice(0,5);
+  var pool=[]; try{ pool=(getPathwayItems('quick')||[]).concat(getPathwayItems('smart')||[]); }catch(e){ pool=[]; }
+  if(!pool.length) pool=[{en:'Set AC to 26°C',th:'ตั้งแอร์ 26°C',pct:6},{en:'Switch to LED lighting',th:'เปลี่ยนเป็นไฟ LED',pct:4}];
+  var seen={}, recs=pool.map(function(p){return {en:p.en,th:p.th,baht:bill*(p.pct/100)};})
+    .sort(function(a,b){return b.baht-a.baht;})
+    .filter(function(r){if(seen[r.en])return false;seen[r.en]=true;return true;}).slice(0,5);
+  var totalSaveYear=recs.reduce(function(s,x){return s+x.baht;},0)*12;
+  return {level:level,kwh:kwh,bill:bill,findings:findings,recs:recs,totalSaveYear:totalSaveYear};
+}
+function svRenderAnalysis(animate){
+  var box=document.getElementById('svAiResult'); if(!box) return;
+  box.classList.remove('hidden');
+  if(animate){
+    box.innerHTML='<div class="flex items-center gap-3 py-6" style="color:var(--text-muted-col)"><i data-lucide="loader" class="icon-md" style="animation:spin 1s linear infinite"></i><span class="text-sm font-700">'+esc(t('svAiAnalyzing'))+'</span></div>';
+    lucide.createIcons({nodes:[box]});
+    setTimeout(function(){svRenderAnalysis(false);},900);
+    return;
+  }
+  var a=svAnalyze();
+  var lv={high:{col:'#E24B4A',bg:'rgba(226,75,74,.12)',ic:'alert-triangle',key:'svAiVerdictHigh'},
+          normal:{col:'#0F4C81',bg:'rgba(15,76,129,.10)',ic:'activity',key:'svAiVerdictNormal'},
+          low:{col:'#3B6D11',bg:'rgba(99,153,34,.14)',ic:'leaf',key:'svAiVerdictLow'}}[a.level];
+  var findingsHtml=a.findings.map(function(fd){
+    return '<div class="flex items-start gap-3 py-2"><div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--surface-3)"><i data-lucide="'+fd.ic+'" class="icon-xs" style="color:#2D7DD2"></i></div><p class="text-sm flex-1" style="color:var(--text-pri)">'+esc(pick(fd))+'</p></div>';
+  }).join('');
+  var recsHtml=a.recs.map(function(r,i){
+    return '<div class="flex items-center gap-3 py-2 border-t" style="border-color:var(--border-light-col)"><span class="w-6 h-6 rounded-full bg-navy-500 text-white text-xs font-800 flex items-center justify-center flex-shrink-0">'+(i+1)+'</span><span class="text-sm flex-1" style="color:var(--text-pri)">'+esc(pick(r))+'</span><span class="font-800 text-sm flex-shrink-0" style="color:var(--text-sec)">'+money(r.baht)+'</span></div>';
+  }).join('');
+  box.innerHTML=
+    '<div class="ba-verdict mb-5" style="background:'+lv.bg+'"><i data-lucide="'+lv.ic+'" class="icon-md flex-shrink-0" style="color:'+lv.col+';margin-top:1px"></i><p class="font-900 text-base leading-snug" style="color:'+lv.col+'">'+esc(tf(lv.key,{kwh:energy(a.kwh)}))+'</p></div>'
+    +'<p class="ba-eyebrow mb-1">'+esc(t('svAiFindings'))+'</p>'+findingsHtml
+    +'<p class="ba-eyebrow mt-5 mb-1">'+esc(t('svAiRecs'))+'</p>'+recsHtml
+    +'<div class="mt-4 p-4 rounded-xl flex items-center gap-3" style="background:var(--surface-2)"><i data-lucide="piggy-bank" class="icon-md flex-shrink-0" style="color:var(--text-sec)"></i><div><p class="text-xs font-600" style="color:var(--text-muted-col)">'+esc(t('svAiBottomLine'))+'</p><p class="font-900 text-lg" style="color:var(--text-sec)">'+esc(tf('svAiSaveYear',{amt:money(a.totalSaveYear)}))+'</p></div></div>';
+  lucide.createIcons({nodes:[box]});
+}
+function updateSvMetrics(){
+  var kwh=state.sv.usageKwh;
+  var cur=calcTariff(kwh);
+  var tab=state.sv.activeTab||'quick';
+  var path=PATHWAYS[tab];
+  var savePct=path?path.maxPct:15;
+  var savedBill=cur.total*(1-savePct/100);
+  var mSave=cur.total*(savePct/100);
+  var uv=document.getElementById('svUsageVal');
+  if(uv) uv.textContent=energy(kwh)+t('perMonth');
+  // Lifestyle context badge
+  var nm=document.getElementById('svProfileName');
+  if(nm){
+    var ls=state.lifestyle;
+    var occ=ls.occupation;
+    var hSize=ls.householdSize||3;
+    var occShort={wfh:state.lang==='th'?'WFH':'WFH',office:state.lang==='th'?'ทำงานนอกบ้าน':'Office',student:state.lang==='th'?'นักศึกษา':'Student',retired:state.lang==='th'?'เกษียณ':'Retired',business:state.lang==='th'?'ธุรกิจ':'Business'};
+    var badge=(occ?'<span class="ml-2 text-[10px] font-700 bg-navy-100 text-navy-500 px-2 py-0.5 rounded-full">'+esc(occShort[occ]||occ)+'</span>':'')
+      +'<span class="ml-1 text-[10px] font-700 bg-navy-50 text-navy-400 px-2 py-0.5 rounded-full">'+esc(String(hSize))+' '+(state.lang==='th'?'คน':'ppl')+'</span>';
+    nm.innerHTML=esc(pick(PROFILES[state.profile].name))+badge;
+  }
+  var met=document.getElementById('svMetrics'); if(!met) return;
+  var md=[
+    {icon:'receipt',lbl:t('svCurrentBill'),val:money(cur.total),grad:true},
+    {icon:'receipt-text',lbl:t('svProjectedBill'),val:money(savedBill),grad:false},
+    {icon:'trending-down',lbl:t('svMonthlySavings'),val:money(mSave),grad:false},
+    {icon:'piggy-bank',lbl:t('svYearlySavings'),val:money(mSave*12),grad:false},
+  ];
+  met.innerHTML=md.map(function(c){
+    var g=c.grad;
+    return '<div class="stat-card'+(g?' blue-grad':'')+'">'
+      +'<div class="flex items-center gap-2 mb-2"><div class="w-7 h-7 rounded-lg '+(g?'bg-white/20':'bg-navy-50')+' flex items-center justify-center">'
+      +'<i data-lucide="'+c.icon+'" class="icon-xs '+(g?'text-white':'text-navy-500')+'"></i></div>'
+      +'<span class="text-'+(g?'white/70':'navy-400')+' text-[11px] font-600">'+esc(c.lbl)+'</span></div>'
+      +'<p class="text-'+(g?'white':'navy-950')+' text-xl font-900">'+esc(c.val)+'</p></div>';
+  }).join('');
+  lucide.createIcons({nodes:[document.getElementById('svMetrics')]});
+}
+function updateSvCharts(){
+  var kwh=state.sv.usageKwh;
+  var p=PROFILES[state.profile];
+  var cur=calcTariff(kwh);
+  // Build projected bills for each tab
+  var paths=Object.keys(PATHWAYS);
+  var labels=paths.map(function(k){return pick(PATHWAYS[k].name);});
+  var currentBills=paths.map(function(){return cur.total;});
+  var projBills=paths.map(function(k){return cur.total*(1-PATHWAYS[k].maxPct/100);});
+  // Bar chart
+  if(state.charts.svBar){state.charts.svBar.destroy();state.charts.svBar=null;}
+  var bctx=document.getElementById('svBarChart'); if(bctx){
+    state.charts.svBar=new Chart(bctx,{type:'bar',
+      data:{labels:labels,datasets:[
+        {label:t('svCurrentLbl'),data:currentBills,backgroundColor:'rgba(15,76,129,.18)',borderColor:'#0F4C81',borderWidth:1.5,borderRadius:6},
+        {label:t('svProjectedLbl'),data:projBills,backgroundColor:'rgba(45,125,210,.65)',borderColor:'#2D7DD2',borderWidth:1.5,borderRadius:6}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),usePointStyle:true}},tooltip:{callbacks:{label:function(c){return ' '+money(c.parsed.y);}}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:11,family:chartFontFamily()},color:chartTextColor()}},y:{grid:{color:chartGridColor()},ticks:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),callback:function(v){return SYM[state.currency]+Math.round(v*FX[state.currency]).toLocaleString();}}}}}});
+  }
+  // Donut chart by category
+  if(state.charts.svDonut){state.charts.svDonut.destroy();state.charts.svDonut=null;}
+  var dctx=document.getElementById('svDonutChart'); if(dctx){
+    var split=p?p.split:{ac:.30,appliances:.20,kitchen:.15,heating:.10,lighting:.10,electronics:.15};
+    var catKwhs=CATS.map(function(c){return kwh*(split[c]||0);});
+    var catLabels=CATS.map(function(c){return pick(CAT_LABELS[c]||{en:c,th:c});});
+    state.charts.svDonut=new Chart(dctx,{type:'doughnut',
+      data:{labels:catLabels,datasets:[{data:catKwhs,backgroundColor:CAT_COLORS,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),padding:10,usePointStyle:true,pointStyleWidth:7}},
+          tooltip:{callbacks:{label:function(c){var tot=c.dataset.data.reduce(function(a,b){return a+b;},0);return ' '+energy(c.parsed)+' ('+Math.round(c.parsed/tot*100)+'%)';}}}}}});
+  }
+}
+function getPathwayItems(key){
+  var ls=state.lifestyle;
+  var occ=ls.occupation;
+  var hSize=ls.householdSize||3;
+  var f=ls.flags;
+  function item(en,th,pct){ return {en:en,th:th,pct:pct}; }
+
+  if(key==='quick'){
+    var items=[
+      item('Set AC to 26°C instead of 22°C','ตั้งแอร์เป็น 26°C แทน 22°C',5),
+      item('Unplug devices on standby','ถอดปลั๊กอุปกรณ์ที่ไม่ใช้งาน',3),
+      item('Use natural light during daytime','ใช้แสงธรรมชาติช่วงกลางวัน',3)
+    ];
+    if(f.acAllDay) items.push(item(
+      'Schedule AC off 12–2 PM & raise to 28°C at night',
+      'ตั้งเวลาแอร์ปิด 12–14 น. และเพิ่มเป็น 28°C ตอนกลางคืน', 8));
+    if(f.waterHeater) items.push(item(
+      'Shorten hot shower to 5 min & turn heater off after use',
+      'อาบน้ำอุ่น 5 นาที แล้วปิดเครื่องทำน้ำอุ่นทันที', 5));
+    if(f.gaming) items.push(item(
+      'Enable PC power-saving plan; sleep after 10 min idle',
+      'เปิดแผนประหยัดพลังงาน PC; สลีปอัตโนมัติหลัง 10 นาที', 4));
+    if(occ==='wfh') items.push(item(
+      'Open windows 10–12 AM before outdoor heat peaks',
+      'เปิดหน้าต่าง 10–12 น. ก่อนอากาศร้อนสุด', 3));
+    if(f.nightOwl) items.push(item(
+      'Set AC sleep timer: auto-off 4 hrs after midnight',
+      'ตั้งเวลาแอร์ปิดอัตโนมัติหลังเที่ยงคืน 4 ชั่วโมง', 4));
+    if(hSize>=4) items.push(item(
+      'Household rule: lights & fans off when leaving rooms',
+      'กฎบ้าน: ปิดไฟและพัดลมทุกครั้งที่ออกจากห้อง', 4));
+    return items.slice(0,5);
+  }
+
+  if(key==='smart'){
+    var items=[
+      item('Smart AC temperature controller with scheduling','ตัวควบคุมอุณหภูมิแอร์อัจฉริยะพร้อมตั้งเวลา',12),
+      item('Full LED lighting upgrade','เปลี่ยนไฟทั้งบ้านเป็น LED',8),
+      item('Roof insulation to reduce AC load','ฉนวนหลังคาเพื่อลดภาระแอร์',6)
+    ];
+    if(f.acAllDay) items.push(item(
+      'Smart AC scheduler with occupancy sensor (save ~฿800/mo)',
+      'ตั้งเวลาแอร์อัจฉริยะพร้อมเซ็นเซอร์ตรวจจับคน (ประหยัด ~800 บาท/เดือน)', 14));
+    if(occ==='office') items.push(item(
+      'Smart home routine: AC off at departure, on 30 min before return',
+      'รูทีนบ้านอัจฉริยะ: แอร์ปิดตอนออก เปิดก่อนกลับ 30 นาที', 10));
+    if(hSize>=4) items.push(item(
+      'Smart power strips with scheduling for common areas',
+      'ปลั๊กอัจฉริยะตั้งเวลาสำหรับพื้นที่ส่วนกลาง', 6));
+    if(f.gaming) items.push(item(
+      'Smart plug + power meter for gaming setup monitoring',
+      'ปลั๊กอัจฉริยะและมิเตอร์วัดไฟสำหรับชุดเกมมิ่ง', 5));
+    if(f.waterHeater) items.push(item(
+      'Smart timer plug for water heater (45 min before shower only)',
+      'ปลั๊กตั้งเวลาอัจฉริยะสำหรับเครื่องทำน้ำอุ่น (เปิด 45 นาทีก่อนอาบ)', 7));
+    return items.slice(0,5);
+  }
+
+  if(key==='longterm'){
+    var items=[
+      item('Rooftop solar (3–5 kWp)','โซลาร์บนหลังคา (3–5 kWp)',20),
+      item('Inverter-type air conditioner','แอร์รุ่นอินเวอร์เตอร์',15),
+      item('Solar water heater','เครื่องทำน้ำอุ่นพลังงานแสงอาทิตย์',10)
+    ];
+    if(f.acAllDay) items.push(item(
+      'Inverter AC upgrade: 40% cut in AC-specific consumption',
+      'อัพเกรดแอร์อินเวอร์เตอร์: ลดการใช้ไฟของแอร์ 40%', 18));
+    if(occ==='wfh') items.push(item(
+      'Solar priority: daytime WFH usage aligns perfectly with solar peak',
+      'ลำดับความสำคัญโซลาร์: การใช้ไฟ WFH ตรงกับช่วง Solar Peak พอดี', 20));
+    if(hSize>=5) items.push(item(
+      '5 kWp solar system recommended for high-occupancy household',
+      'แนะนำโซลาร์ 5 kWp สำหรับบ้านที่มีผู้อยู่อาศัยมาก', 22));
+    if(f.waterHeater) items.push(item(
+      'Solar water heater ROI: 3–4 years for daily users',
+      'คืนทุนเครื่องทำน้ำอุ่นพลังงานแสงอาทิตย์: 3–4 ปีสำหรับผู้ใช้ประจำ', 12));
+    if(f.multipleAC) items.push(item(
+      'Multi-head inverter system: replace multiple AC units with one efficient system',
+      'ระบบ Multi-Head Inverter: แทนแอร์หลายตัวด้วยระบบเดียวที่มีประสิทธิภาพสูง', 16));
+    return items.slice(0,5);
+  }
+
+  return PATHWAYS[key]?PATHWAYS[key].items:[];
+}
+function renderSvTabs(){
+  var bar=document.getElementById('svTabBar'); if(!bar) return;
+  var keys=Object.keys(PATHWAYS);
+  bar.innerHTML=keys.map(function(k){
+    var pw=PATHWAYS[k]; var act=(state.sv.activeTab===k);
+    return '<button onclick="setSvTab(\''+k+'\')" class="tab-btn flex-1 min-w-[120px] '+(act?'active':'')+'">'
+      +'<div class="flex items-center gap-2 mb-0.5"><i data-lucide="'+pw.icon+'" class="icon-xs"></i><span class="tab-name">'+esc(pick(pw.name))+'</span></div>'
+      +'<div class="tab-tag">'+esc(pick(pw.tag))+'</div></button>';
+  }).join('');
+  lucide.createIcons({nodes:[bar]});
+  updateSvTabContent();
+}
+function setSvTab(k){state.sv.activeTab=k;saveLS();renderSvTabs();updateSvMetrics();}
+function updateSvTabContent(){
+  var k=state.sv.activeTab||'quick';
+  var pw=PATHWAYS[k];
+  var kwh=state.sv.usageKwh;
+  var cur=calcTariff(kwh);
+  var mSave=cur.total*(pw.maxPct/100);
+  var tc=document.getElementById('svTabContent'); if(!tc) return;
+  tc.innerHTML='<div class="grid lg:grid-cols-2 gap-6">'
+    +'<div>'
+    +'<div class="flex items-center gap-3 mb-4 p-4 bg-navy-50 rounded-xl">'
+    +'<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center flex-shrink-0"><i data-lucide="'+pw.icon+'" class="icon-md text-white"></i></div>'
+    +'<div><p class="text-navy-950 font-800">'+esc(pick(pw.name))+'</p><p class="text-navy-400 text-xs">'+esc(pick(pw.tag))+'</p></div></div>'
+    +'<div class="space-y-3 mb-4">'
+    +'<div class="flex justify-between text-sm border-b border-navy-50 pb-2"><span class="text-navy-400 font-600">'+t('svInvestLabel')+'</span><span class="text-navy-950 font-800">'+esc(pick(pw.invest))+'</span></div>'
+    +'<div class="flex justify-between text-sm border-b border-navy-50 pb-2"><span class="text-navy-400 font-600">'+t('svMaxSave')+'</span><span class="text-emerald-600 font-800">'+pw.maxPct+'% ('+money(mSave)+t('perMonth')+')</span></div>'
+    +'<div class="flex justify-between text-sm"><span class="text-navy-400 font-600">'+t('svYearlySavings')+'</span><span class="text-navy-950 font-800">'+money(mSave*12)+t('perYear')+'</span></div>'
+    +'</div></div>'
+    +'<div>'
+    +'<p class="text-navy-600 text-xs font-700 mb-3 uppercase tracking-wide">Action Items</p>'
+    +'<ul class="space-y-2.5">'
+    +getPathwayItems(k).map(function(item,i){
+      return '<li class="flex items-start gap-3 p-3 bg-navy-50 rounded-xl">'
+        +'<div class="w-6 h-6 rounded-lg bg-navy-500 text-white flex items-center justify-center text-[11px] font-900 flex-shrink-0 mt-0.5">'+(i+1)+'</div>'
+        +'<div class="flex-1"><p class="text-navy-950 text-sm font-600">'+esc(pick(item))+'</p>'
+        +'<p class="text-emerald-600 text-xs font-700 mt-0.5">−'+item.pct+'% '+(state.lang==='th'?'ประหยัดได้':'savings')+'</p></div></li>';
+    }).join('')
+    +'</ul></div></div>';
+  lucide.createIcons({nodes:[tc]});
+}
+
+// ══════════════════════════════════════════════════════
+// COMMUNITY
+// ══════════════════════════════════════════════════════
+function renderCommunity(){
+  document.querySelectorAll('#sec-community [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
+  document.querySelectorAll('#sec-community [data-i-ph]').forEach(function(el){el.placeholder=t(el.getAttribute('data-i-ph'));});
+  // Handle display
+  var av=document.getElementById('commAvatar');
+  var hn=document.getElementById('commHandleTxt');
+  if(av){av.textContent=initials(state.handle).toUpperCase();av.style.background=state.handleColor;}
+  if(hn) hn.textContent=state.handle;
+  // Post list
+  var list=document.getElementById('commList'); if(!list) return;
+  var sorted=state.community.slice().sort(function(a,b){return b.ts-a.ts;});
+  if(!sorted.length){
+    list.innerHTML='<div class="text-center py-16 text-navy-300"><i data-lucide="message-circle" class="icon-lg mx-auto mb-3"></i><p class="font-600">'+t('commEmpty')+'</p></div>';
+    lucide.createIcons({nodes:[list]});
+    return;
+  }
+  list.innerHTML=sorted.map(function(post){
+    var isLiked=post.likes&&post.likes.indexOf(state.handle)>=0;
+    return '<div class="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm card-spring animate-pop-in" id="post-'+post.id+'">'
+      +'<div class="flex items-start gap-3 mb-3">'
+      +'<div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-900 text-sm flex-shrink-0" style="background:'+esc(post.color||'#0F4C81')+'">'+esc(initials(post.handle).toUpperCase())+'</div>'
+      +'<div class="flex-1 min-w-0">'
+      +'<p class="text-navy-950 font-800 text-sm">'+esc(post.handle)+'</p>'
+      +'<p class="text-navy-300 text-xs">'+esc(timeAgo(post.ts))+'</p>'
+      +'</div></div>'
+      +'<p class="text-navy-700 text-sm leading-relaxed mb-4">'+esc(post.text)+'</p>'
+      +'<div class="flex items-center gap-2">'
+      +'<button onclick="likePost(\''+post.id+'\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-700 transition-all duration-200 '+(isLiked?'bg-navy-500 text-white':'bg-navy-50 text-navy-400 hover:bg-navy-100')+'">'
+      +'<i data-lucide="thumbs-up" class="icon-xs"></i><span>'+(post.likes?post.likes.length:0)+'</span></button>'
+      +'<button onclick="toggleReply(\''+post.id+'\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-50 text-navy-400 hover:bg-navy-100 text-xs font-700 transition-colors">'
+      +'<i data-lucide="message-circle" class="icon-xs"></i><span>'+t('commReply')+(post.replies&&post.replies.length?' ('+post.replies.length+')':'')+'</span></button>'
+      +'</div>'
+      +(post.replies&&post.replies.length?'<div class="mt-3 space-y-2 pl-4 border-l-2 border-navy-100">'+post.replies.map(function(r){
+        return '<div class="flex gap-2"><div class="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-900 flex-shrink-0 mt-0.5" style="background:'+esc(r.color||'#99C3FF')+'">'+esc(initials(r.handle).toUpperCase())+'</div>'
+          +'<div><p class="text-navy-600 text-xs font-700">'+esc(r.handle)+'</p><p class="text-navy-700 text-xs leading-relaxed">'+esc(r.text)+'</p></div></div>';
+      }).join('')+'</div>':'')
+      +'<div id="replyBox-'+post.id+'" class="hidden mt-3 flex gap-2">'
+      +'<input type="text" id="replyInput-'+post.id+'" placeholder="'+t('commReplyPlaceholder')+'" class="flex-1 border border-navy-200 rounded-xl px-3 py-2 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/>'
+      +'<button onclick="sendReply(\''+post.id+'\')" class="px-4 py-2 bg-navy-500 text-white text-xs font-700 rounded-xl hover:bg-navy-600 transition-colors">'+t('commSend')+'</button>'
+      +'</div></div>';
+  }).join('');
+  lucide.createIcons({nodes:[list]});
+}
+function postCommunity(){
+  var inp=document.getElementById('commInput');
+  var txt=(inp?inp.value:'').trim();
+  if(!txt){showToast(t('toastEmptyPost'),'error');return;}
+  state.community.unshift({id:'p'+Date.now(),handle:state.handle,color:state.handleColor,text:txt,ts:Date.now(),likes:[],replies:[]});
+  if(inp) inp.value='';
+  saveLS();showToast(t('commToastPost'));renderCommunity();
+}
+function likePost(id){
+  var post=state.community.find(function(p){return p.id===id;});
+  if(!post) return;
+  if(!post.likes) post.likes=[];
+  var idx=post.likes.indexOf(state.handle);
+  if(idx>=0) post.likes.splice(idx,1); else post.likes.push(state.handle);
+  saveLS();renderCommunity();
+}
+function toggleReply(id){
+  var box=document.getElementById('replyBox-'+id);
+  if(!box) return;
+  box.classList.toggle('hidden');
+  if(!box.classList.contains('hidden')){
+    var inp=document.getElementById('replyInput-'+id);
+    if(inp) inp.focus();
+  }
+}
+function sendReply(id){
+  var inp=document.getElementById('replyInput-'+id);
+  var txt=(inp?inp.value:'').trim();
+  if(!txt){showToast(t('toastEmptyPost'),'error');return;}
+  var post=state.community.find(function(p){return p.id===id;});
+  if(!post) return;
+  if(!post.replies) post.replies=[];
+  post.replies.push({handle:state.handle,color:state.handleColor,text:txt,ts:Date.now()});
+  saveLS();showToast(t('commToastReply'));renderCommunity();
+}
+
+// ══════════════════════════════════════════════════════
+// ECOBOT CHATBOT
+// ══════════════════════════════════════════════════════
+function renderEcobot(){
+  var input=document.getElementById('ecobotInput');
+  if(input) input.placeholder=t('ecobotPlaceholder');
+  var sub=document.querySelector('[data-i="ecobotSubtitle"]');
+  if(sub) sub.textContent=t('ecobotSubtitle');
+  if(state.chatHistory.length) renderChatLog();
+}
+function addBotMsg(text){
+  state.chatHistory.push({role:'bot',text:text,ts:Date.now()});
+  saveLS();renderChatLog();
+}
+function addUserMsg(text){
+  state.chatHistory.push({role:'user',text:text,ts:Date.now()});
+  renderChatLog();
+  setTimeout(function(){
+    var reply=getEcobotReply(text);
+    addBotMsg(reply);
+    renderQuickReplies();
+  },600);
+}
+function renderChatLog(){
+  var log=document.getElementById('ecobotLog'); if(!log) return;
+  log.innerHTML=state.chatHistory.map(function(m){
+    var isBot=m.role==='bot';
+    return '<div class="flex '+(isBot?'items-start':'items-end justify-end')+' gap-2">'
+      +(isBot?'<div class="w-7 h-7 rounded-lg bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="icon-xs text-white"></i></div>':'')
+      +'<div class="max-w-[82%] rounded-2xl px-3.5 py-2.5 '+(isBot?'bg-navy-50 text-navy-950 rounded-tl-sm':'bg-gradient-to-r from-navy-500 to-navy-400 text-white rounded-br-sm')+'">'
+      +'<p class="text-sm leading-relaxed font-500">'+esc(m.text)+'</p>'
+      +'<p class="text-[10px] mt-1 '+(isBot?'text-navy-300':'text-white/60')+'">'+timeAgo(m.ts)+'</p>'
+      +'</div></div>';
+  }).join('');
+  lucide.createIcons({nodes:[log]});
+  log.scrollTop=log.scrollHeight;
+}
+function renderQuickReplies(){
+  var qr=document.getElementById('ecobotQuickReplies'); if(!qr) return;
+  var chips=['ecobotQuick1','ecobotQuick2','ecobotQuick3','ecobotQuick4'];
+  qr.innerHTML=chips.map(function(k){
+    return '<button onclick="sendQuickReply(\''+k+'\')" class="text-[11.5px] font-600 bg-navy-50 text-navy-500 border border-navy-200 hover:bg-navy-100 px-3 py-1.5 rounded-xl transition-colors">'+esc(t(k))+'</button>';
+  }).join('');
+}
+function sendQuickReply(k){
+  var text=t(k);
+  var inp=document.getElementById('ecobotInput');
+  if(inp) inp.value=text;
+  sendEcobotMsg();
+}
+function sendEcobotMsg(){
+  var inp=document.getElementById('ecobotInput');
+  var txt=(inp?inp.value:'').trim();
+  if(!txt) return;
+  if(inp) inp.value='';
+  addUserMsg(txt);
+  saveLS();
+}
+function getEcobotReply(msg){
+  var lc=msg.toLowerCase();
+  var l=state.lang;
+  var kwh=state.sv.usageKwh||(state.profile?PROFILES[state.profile].defaultKwh:300);
+  var bill=calcTariff(kwh);
+  var bm=money(bill.total);
+  var T=state.tariff;
+  var ls=state.lifestyle;
+  var occ=ls.occupation;
+  var hSize=ls.householdSize||3;
+  var f=ls.flags;
+  function th(a,b){return l==='th'?a:b;}
+  // Lifestyle context intent
+  if(/lifestyle|profile|occupation|household|questionnaire|ไลฟ์สไตล์|อาชีพ|ครัวเรือน/.test(lc)){
+    var occLbl={wfh:th('ทำงานที่บ้าน','Work from Home'),office:th('ทำงานนอกบ้าน','Office Worker'),student:th('นักศึกษา','Student'),retired:th('เกษียณ','Retired'),business:th('เจ้าของธุรกิจ','Business Owner')};
+    var occStr=occLbl[occ]||(l==='th'?'ยังไม่ระบุ':'not specified');
+    var flagList=[];
+    if(f.acAllDay) flagList.push(th('เปิดแอร์ทั้งวัน','AC all day'));
+    if(f.gaming) flagList.push(th('เล่นเกม','gaming'));
+    if(f.waterHeater) flagList.push(th('ใช้น้ำอุ่นทุกวัน','daily hot water'));
+    if(f.nightOwl) flagList.push(th('ตื่นดึก','night owl'));
+    if(f.multipleAC) flagList.push(th('แอร์หลายตัว','multiple ACs'));
+    return th(
+      'โปรไฟล์ไลฟ์สไตล์ปัจจุบัน: อาชีพ = '+occStr+', '+hSize+' คนในครัวเรือน'+(flagList.length?' สัญญาณที่ตรวจพบ: '+flagList.join(', '):'')+'.',
+      'Current lifestyle: Occupation = '+occStr+', household of '+hSize+(flagList.length?', detected habits: '+flagList.join(', ')+'.':'.'));
+  }
+  if(/hello|hi|hey|สวัสดี|หวัดดี/.test(lc))
+    return th('สวัสดี! ผมคือ Ecobot ที่ปรึกษาพลังงาน AI ของคุณ ถามผมได้เลยเกี่ยวกับค่าไฟ การประหยัด หรือโซลาร์เซลล์',
+              'Hi! I\'m Ecobot, your AI energy advisor. Ask me about bills, saving tips, solar panels, or tariff rates — I\'m here to help!');
+  if(/save|saving|reduce|ประหยัด|ลด/.test(lc)){
+    var saveBase=th('คุณสามารถประหยัดได้ถึง 15% เพียงเปลี่ยนพฤติกรรม เช่น ตั้งแอร์ 26°C ถอดปลั๊กอุปกรณ์ที่ไม่ใช้ นั่นคือประมาณ '+money(bill.total*.15)+' ต่อเดือน',
+      'You can save up to 15% through habit changes alone — set AC to 26°C, unplug idle devices. That\'s about '+money(bill.total*.15)+'/month');
+    if(occ==='wfh'&&f.acAllDay) saveBase+=th(' เนื่องจากคุณทำงานที่บ้านและเปิดแอร์ทั้งวัน แอร์คือแหล่งใช้ไฟหลักของคุณ — ลองตั้งเวลาหรือปิดช่วง 12–14 น.',
+      ' — since you WFH with AC all day, cooling is your #1 driver: try scheduling it off 12–2 PM.');
+    if(hSize>=4) saveBase+=th(' บ้านคุณมีหลายคน ลองตั้งกฎปิดไฟและพัดลมเมื่อออกจากห้อง',
+      ' With '+hSize+' people in the household, setting shared "lights-off" rules can add another 4–6% savings.');
+    return saveBase+th(' ลองไป SmartVolt เพื่อดูแผนละเอียด','. Check SmartVolt for your personalised plan!');
+  }
+  if(/bill|cost|ค่าไฟ|ค่าใช้จ่าย/.test(lc)){
+    var billStr=th('ที่ '+energy(kwh)+'/เดือน ค่าไฟของคุณประมาณ '+bm+' (รวม Ft และ VAT 7%)',
+      'At '+energy(kwh)+'/month, your estimated bill is approximately '+bm+' (including Ft charges and 7% VAT)');
+    if(hSize>1) billStr+=th(' สำหรับ '+hSize+' คน คิดเป็น '+money(bill.total/hSize)+'/คน/เดือน',
+      ' — for your household of '+hSize+', that\'s '+money(bill.total/hSize)+' per person per month.');
+    return billStr;
+  }
+  if(/tariff|rate|tier|อัตรา|ค่าไฟฐาน/.test(lc))
+    return th('อัตราค่าไฟปัจจุบัน: ชั้น 1 (0–150 หน่วย) ฿'+T.tiers[0].rate+'/หน่วย • ชั้น 2 (151–400) ฿'+T.tiers[1].rate+'/หน่วย • ชั้น 3 (401+) ฿'+T.tiers[2].rate+'/หน่วย บวกค่า Ft ฿'+T.ft+'/หน่วย และ VAT '+T.vatPct+'%',
+              'Current tariff rates: Tier 1 (0–150 kWh) ฿'+T.tiers[0].rate+'/unit · Tier 2 (151–400) ฿'+T.tiers[1].rate+'/unit · Tier 3 (401+) ฿'+T.tiers[2].rate+'/unit, plus Ft ฿'+T.ft+'/unit and '+T.vatPct+'% VAT.');
+  if(/solar|sun|โซลาร์|แผง/.test(lc))
+    return th('โซลาร์เซลล์ 3–5 kWp ราคาประมาณ 80,000–150,000 บาท ประหยัดได้สูงสุด 45% หรือ '+money(bill.total*.45)+'/เดือน คืนทุนภายใน 5–7 ปี',
+              'A 3–5 kWp rooftop solar system costs ฿80,000–150,000 but can save up to 45% (≈'+money(bill.total*.45)+'/month) with a 5–7 year payback period.');
+  if(/ac|air|แอร์|เครื่องปรับ/.test(lc))
+    return th('แอร์คิดเป็น 35–40% ของค่าไฟทั้งหมด เคล็ดลับ: ตั้ง 26°C แทน 22°C ประหยัดได้ 6–8% ล้างฟิลเตอร์ทุก 2 สัปดาห์ประหยัดได้อีก 5%',
+              'AC typically accounts for 35–40% of your bill. Key tips: set to 26°C (saves 6–8%), clean filters every 2 weeks (saves 5%), and choose an inverter-type model when replacing.');
+  if(/smartvolt|profile|strategy|plan|แผน|กลยุทธ์/.test(lc)){
+    var pn=state.profile?pick(PROFILES[state.profile].name):(l==='th'?'ยังไม่ได้เลือก':'not selected');
+    return th('SmartVolt มี 3 กลยุทธ์: Quick Wins (ประหยัด 15% ฟรี) Smart Tech (26% ลงทุน 5,000–15,000 บาท) Long-Term (45% ลงทุน 80,000+ บาท) โปรไฟล์ปัจจุบัน: '+pn,
+              'SmartVolt offers 3 paths: Quick Wins (15% savings, free), Smart Tech (26%, ฿5,000–15,000), Long-Term Investment (45%, ฿80,000+). Current profile: '+pn+'.');
+  }
+  if(/compare|เปรียบเทียบ/.test(lc))
+    return th('เปรียบเทียบกลยุทธ์: Quick Wins ง่ายที่สุด ประหยัด '+money(bill.total*.15)+'/เดือน | Smart Tech ประหยัด '+money(bill.total*.26)+'/เดือน | Long-Term ประหยัดได้สูงสุด '+money(bill.total*.45)+'/เดือน',
+              'Strategy comparison: Quick Wins (free, save '+money(bill.total*.15)+'/mo) · Smart Tech (save '+money(bill.total*.26)+'/mo) · Long-Term Investment (max save '+money(bill.total*.45)+'/mo).');
+  return th('ขอบคุณที่ถามครับ! ลองถามเกี่ยวกับ ค่าไฟ การประหยัดพลังงาน เครื่องปรับอากาศ โซลาร์เซลล์ อัตราค่าไฟ หรือกลยุทธ์ SmartVolt',
+            'Thanks for asking! Try asking me about your electricity bill, saving energy, air conditioning, solar panels, tariff rates, or SmartVolt strategies.');
+}
+// Ecobot send events
+document.getElementById('ecobotSend').addEventListener('click',sendEcobotMsg);
+document.getElementById('ecobotInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendEcobotMsg();}});
+
+// ── INIT ────────────────────────────────────────────────
+function seedCommunityIfEmpty(){
+  if(state.community.length) return;
+  state.community=SEED_POSTS.map(function(p,i){
+    var h=genHandle(); var c=colorForHandle(h);
+    return {id:'seed'+i,handle:h,color:c,text:pick(p),ts:Date.now()-(i+1)*3600000*Math.floor(Math.random()*18+6),likes:[],replies:[]};
+  });
+}
+function init(){
+  loadLS();
+  seedCommunityIfEmpty();
+  document.documentElement.lang=state.lang;
+  applyTheme(state.theme);
+  initSeg('segLang','lang',state.lang);
+  initSeg('segCurrency','currency',state.currency);
+  initSeg('segUnit','unit',state.unit);
+  applyStrings();
+  navigateTo('hero');
+  lucide.createIcons();
+}
+init();
+</script>
+</body>
+</html>
