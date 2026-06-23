@@ -39,6 +39,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- Spline 3D viewer (vanilla web component) -->
 <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
+<!-- Supabase JS SDK (cloud login + sync) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{ --navy-950:#0A2540; --navy-500:#0F4C81; --navy-50:#E6F0FF; }
 *,::before,::after{box-sizing:border-box}
@@ -205,6 +207,8 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
         <button class="seg-btn" data-val="Wh">Wh</button>
         <button class="seg-btn" data-val="BTU">BTU</button>
       </div>
+      <!-- Auth (Google login + sync) — populated by renderAuthUI(), hidden if Supabase not configured -->
+      <div id="authWrap" class="hidden flex-shrink-0"></div>
       <!-- Theme toggle -->
       <button id="themeToggle" class="w-9 h-9 rounded-xl bg-navy-50 border border-navy-200 text-navy-500 flex items-center justify-center hover:bg-navy-100 hover:scale-105 transition-all duration-200" title="Toggle dark/light mode">
         <i data-lucide="moon" class="icon-sm" id="themeIcon"></i>
@@ -799,6 +803,8 @@ en:{
   svAiVerdictLow:'Efficient — {kwh}/mo is below average. A few tweaks go further',
   svAiFindings:'Key findings', svAiRecs:'Recommended actions (by impact)',
   svAiBottomLine:'Total potential savings', svAiSaveYear:'up to {amt}/year',
+  authSignIn:'Sign in', authSignInGoogle:'Sign in with Google', authSignOut:'Sign out',
+  authSyncing:'Syncing…', authSynced:'Synced to cloud', authSyncError:'Sync error',
   heroBadge:'AI-Powered Energy Intelligence for Thai Homes',
   heroTitle:'Take Control of Your', heroTitleAccent:'Electricity Bill',
   heroSub:'Track every watt, simulate your Thai electricity bill with real MEA/PEA tariffs, and unlock AI-powered savings strategies tailored to your lifestyle.',
@@ -907,6 +913,8 @@ th:{
   svAiVerdictLow:'ประหยัดดี — {kwh}/เดือน ต่ำกว่าค่าเฉลี่ย ปรับอีกนิดยิ่งดี',
   svAiFindings:'ข้อค้นพบสำคัญ', svAiRecs:'คำแนะนำ (เรียงตามผลกระทบ)',
   svAiBottomLine:'ประหยัดได้สูงสุดรวม', svAiSaveYear:'สูงสุด {amt}/ปี',
+  authSignIn:'เข้าสู่ระบบ', authSignInGoogle:'เข้าสู่ระบบด้วย Google', authSignOut:'ออกจากระบบ',
+  authSyncing:'กำลังซิงค์…', authSynced:'ซิงค์ขึ้นคลาวด์แล้ว', authSyncError:'ซิงค์ผิดพลาด',
   heroBadge:'ระบบอัจฉริยะประหยัดพลังงานสำหรับบ้านไทย',
   heroTitle:'ควบคุม', heroTitleAccent:'ค่าไฟของคุณ',
   heroSub:'ติดตามทุกวัตต์ จำลองค่าไฟตามอัตรา MEA/PEA จริงของไทย และรับแผนประหยัดพลังงานเฉพาะบุคคลจาก AI',
@@ -985,6 +993,15 @@ th:{
 
 // ── Application State ───────────────────────────────────
 var DEFAULT_TARIFF = { tiers:[{max:150,rate:3.2484},{max:400,rate:4.2218},{max:999999,rate:4.4217}], serviceFee:8.19, ft:0.8232, vatPct:7 };
+// ═══════════════════════════════════════════════════════════════════
+// SUPABASE CONFIG — paste your project values here to enable cloud
+// login (Google) + cross-device sync. Leave blank = app runs as guest
+// (localStorage only), login UI hidden. The anon key is PUBLIC by design
+// (Row Level Security protects user data) — safe to commit.
+// ═══════════════════════════════════════════════════════════════════
+var SUPABASE_URL='';        // e.g. 'https://abcdefgh.supabase.co'
+var SUPABASE_ANON_KEY='';   // your project's anon / publishable key
+
 var state = {
   lang:'en', currency:'THB', unit:'kWh', theme:'light',
   activeSec:'hero',
@@ -1222,6 +1239,7 @@ function saveLS(){
     localStorage.setItem('ae3-chat',JSON.stringify(state.chatHistory));
     localStorage.setItem('ae3-lifestyle',JSON.stringify(state.lifestyle));
   }catch(e){}
+  if(typeof schedulePush==='function') schedulePush();
 }
 function loadLS(){
   try{
@@ -1248,6 +1266,126 @@ function loadLS(){
     var ls=JSON.parse(localStorage.getItem('ae3-lifestyle')||'null');
     if(ls) state.lifestyle=Object.assign(state.lifestyle,ls);
   }catch(e){state.handle=genHandle();state.handleColor=colorForHandle(state.handle);}
+}
+
+// ══════════════════════════════════════════════════════
+// CLOUD LOGIN (Google) + SYNC  — via Supabase
+// ══════════════════════════════════════════════════════
+var sb=null, authUser=null, _pushTimer=null, _applyingRemote=false, _lastSync='';
+function initSupabase(){
+  if(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase){
+    try{ sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY); }catch(e){ sb=null; }
+  }
+}
+function initAuth(){
+  renderAuthUI();
+  if(!sb) return;
+  // Close the account menu when clicking elsewhere
+  document.addEventListener('click',function(){ var m=document.getElementById('authMenu'); if(m) m.classList.add('hidden'); });
+  sb.auth.getSession().then(function(res){
+    authUser=(res.data&&res.data.session)?res.data.session.user:null;
+    renderAuthUI();
+    if(authUser) pullRemoteState();
+  });
+  sb.auth.onAuthStateChange(function(event,session){
+    var was=authUser?authUser.id:null;
+    authUser=session?session.user:null;
+    renderAuthUI();
+    if(authUser&&authUser.id!==was) pullRemoteState();
+  });
+}
+function signInGoogle(){ if(sb) sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href.split('#')[0].split('?')[0]}}); }
+function signOutUser(){ if(sb) sb.auth.signOut(); }
+// ── State (de)serialization for sync ──
+function serializeState(){
+  return { v:1,
+    settings:{lang:state.lang,currency:state.currency,unit:state.unit,theme:state.theme},
+    appliances:state.appliances, nextApId:state.nextApId, tariff:state.tariff,
+    sv:state.sv, billSim:state.billSim, handle:state.handle, handleColor:state.handleColor,
+    community:state.community, chatHistory:state.chatHistory, lifestyle:state.lifestyle,
+    profile:state.profile, lastBillAnalysis:state.lastBillAnalysis||null };
+}
+function applyRemoteState(d){
+  if(!d) return;
+  _applyingRemote=true;
+  try{
+    if(d.settings){ state.lang=d.settings.lang||state.lang; state.currency=d.settings.currency||state.currency; state.unit=d.settings.unit||state.unit; state.theme=d.settings.theme||state.theme; }
+    if(d.appliances){ state.appliances=d.appliances; state.nextApId=d.nextApId||state.nextApId; }
+    if(d.tariff){ if(d.tariff.tiers) d.tariff.tiers.forEach(function(t){if(t.max==null||t.max>999998)t.max=999999;}); state.tariff=d.tariff; }
+    if(d.sv) state.sv=Object.assign(state.sv,d.sv);
+    if(d.billSim) state.billSim=d.billSim;
+    if(d.handle){ state.handle=d.handle; state.handleColor=d.handleColor||state.handleColor; }
+    if(d.community) state.community=d.community;
+    if(d.chatHistory) state.chatHistory=d.chatHistory;
+    if(d.lifestyle) state.lifestyle=Object.assign(state.lifestyle,d.lifestyle);
+    if(typeof d.profile!=='undefined') state.profile=d.profile;
+    if(typeof d.lastBillAnalysis!=='undefined') state.lastBillAnalysis=d.lastBillAnalysis;
+    saveLS();
+    applyTheme(state.theme);
+    if(typeof initSeg==='function'){ initSeg('segLang','lang',state.lang); initSeg('segCurrency','currency',state.currency); initSeg('segUnit','unit',state.unit); }
+    applyStrings();
+    renderEverything();
+  }catch(e){}
+  _applyingRemote=false;
+}
+function pullRemoteState(){
+  if(!sb||!authUser) return;
+  setSyncStatus('syncing');
+  sb.from('user_state').select('data').eq('user_id',authUser.id).maybeSingle().then(function(res){
+    if(res.error){ setSyncStatus('error'); return; }
+    if(res.data&&res.data.data){ applyRemoteState(res.data.data); setSyncStatus('synced'); }
+    else { pushRemoteState(); } // first login → seed cloud from local data
+  });
+}
+function pushRemoteState(){
+  if(!sb||!authUser) return;
+  setSyncStatus('syncing');
+  sb.from('user_state').upsert({user_id:authUser.id,data:serializeState(),updated_at:new Date().toISOString()}).then(function(res){
+    setSyncStatus(res.error?'error':'synced');
+  });
+}
+function schedulePush(){
+  if(!sb||!authUser||_applyingRemote) return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(pushRemoteState,1500);
+}
+// ── Auth UI ──
+function setSyncStatus(s){
+  _lastSync=s;
+  var el=document.getElementById('authSync'); if(!el) return;
+  var map={syncing:{i:'loader',t:t('authSyncing'),c:'var(--text-muted-col)'},synced:{i:'cloud-check',t:t('authSynced'),c:'#3B6D11'},error:{i:'cloud-off',t:t('authSyncError'),c:'#E24B4A'}};
+  var m=map[s]||map.synced;
+  el.innerHTML='<i data-lucide="'+m.i+'" class="icon-xs"'+(s==='syncing'?' style="animation:spin 1s linear infinite"':'')+'></i><span>'+esc(m.t)+'</span>';
+  el.style.color=m.c; lucide.createIcons({nodes:[el]});
+}
+function renderAuthUI(){
+  var wrap=document.getElementById('authWrap'); if(!wrap) return;
+  if(!sb){ wrap.classList.add('hidden'); wrap.innerHTML=''; return; }
+  wrap.classList.remove('hidden');
+  if(authUser){
+    var meta=authUser.user_metadata||{};
+    var nm=meta.full_name||meta.name||(authUser.email||'').split('@')[0]||'User';
+    var av=meta.avatar_url||meta.picture||'';
+    wrap.innerHTML='<div class="relative">'
+      +'<button id="authChip" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full border border-navy-200 hover:bg-navy-50 transition-colors" style="border-color:var(--border-col)">'
+      +(av?'<img src="'+esc(av)+'" referrerpolicy="no-referrer" class="w-7 h-7 rounded-full" alt="">':'<span class="w-7 h-7 rounded-full bg-navy-500 text-white text-xs font-800 flex items-center justify-center">'+esc((nm[0]||'U').toUpperCase())+'</span>')
+      +'<span class="text-xs font-700 max-w-[90px] truncate hidden sm:block" style="color:var(--text-pri)">'+esc(nm)+'</span>'
+      +'<i data-lucide="chevron-down" class="icon-xs text-navy-400"></i></button>'
+      +'<div id="authMenu" class="hidden absolute right-0 mt-2 w-60 rounded-xl border shadow-xl p-2 z-50" style="background:var(--surface);border-color:var(--border-col)">'
+      +'<div class="px-3 py-2"><p class="text-sm font-800 truncate" style="color:var(--text-pri)">'+esc(nm)+'</p><p class="text-xs truncate" style="color:var(--text-muted-col)">'+esc(authUser.email||'')+'</p></div>'
+      +'<div id="authSync" class="px-3 py-1.5 text-xs font-700 flex items-center gap-1.5"></div>'
+      +'<button id="authSignout" class="w-full mt-1 flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 text-sm font-700 transition-colors"><i data-lucide="log-out" class="icon-sm"></i>'+esc(t('authSignOut'))+'</button>'
+      +'</div></div>';
+    lucide.createIcons({nodes:[wrap]});
+    document.getElementById('authChip').onclick=function(e){ e.stopPropagation(); document.getElementById('authMenu').classList.toggle('hidden'); };
+    document.getElementById('authSignout').onclick=function(){ signOutUser(); };
+    setSyncStatus(_lastSync||'synced');
+  } else {
+    wrap.innerHTML='<button id="authSigninBtn" class="flex items-center gap-2 border font-700 text-xs px-3 py-2 rounded-xl hover:shadow-sm transition-all" style="color:var(--text-pri);background:var(--surface);border-color:var(--border-col)">'
+      +'<svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>'
+      +'<span class="hidden sm:inline">'+esc(t('authSignInGoogle'))+'</span><span class="sm:hidden">'+esc(t('authSignIn'))+'</span></button>';
+    document.getElementById('authSigninBtn').onclick=function(){ signInGoogle(); };
+  }
 }
 
 // ── Theme ──────────────────────────────────────────────
@@ -2368,6 +2506,8 @@ function init(){
   applyStrings();
   navigateTo('hero');
   lucide.createIcons();
+  initSupabase();
+  initAuth();
 }
 init();
 </script>
