@@ -209,6 +209,10 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
       </div>
       <!-- Auth (Google login + sync) — populated by renderAuthUI(), hidden if Supabase not configured -->
       <div id="authWrap" class="hidden flex-shrink-0"></div>
+      <!-- Help / how-to-use -->
+      <button id="helpBtn" onclick="openHelp()" class="w-9 h-9 rounded-xl bg-navy-50 border border-navy-200 text-navy-500 flex items-center justify-center hover:bg-navy-100 hover:scale-105 transition-all duration-200 flex-shrink-0" title="How to use" aria-label="How to use">
+        <i data-lucide="help-circle" class="icon-sm"></i>
+      </button>
       <!-- Theme toggle -->
       <button id="themeToggle" class="w-9 h-9 rounded-xl bg-navy-50 border border-navy-200 text-navy-500 flex items-center justify-center hover:bg-navy-100 hover:scale-105 transition-all duration-200" title="Toggle dark/light mode">
         <i data-lucide="moon" class="icon-sm" id="themeIcon"></i>
@@ -1235,6 +1239,32 @@ function showToast(msg,type){
 // ── Modal ──────────────────────────────────────────────
 function openModal(html){ var ov=document.getElementById('modalOverlay'); document.getElementById('modalBox').innerHTML=html; ov.classList.remove('hidden'); ov.classList.add('flex'); lucide.createIcons({nodes:[document.getElementById('modalBox')]}); }
 function closeModal(){ var ov=document.getElementById('modalOverlay'); ov.classList.add('hidden'); ov.classList.remove('flex'); }
+function openHelp(){
+  var L=state.lang==='th';
+  var items=[
+    ['layout-dashboard', L?'แดชบอร์ด':'Dashboard', L?'ดูภาพรวมค่าไฟ แนวโน้มการใช้ และความเสี่ยงบิลแพงของเดือนนี้':'Overview of your bill, usage trend, and high-bill risk'],
+    ['scan-line', L?'วิเคราะห์บิล':'Bill Analyzer', L?'อัปโหลดรูปบิล/PDF หรือกรอกหน่วย+ยอดเงิน แล้ว AI จะหาสาเหตุที่แพงและวิธีประหยัด — อัปเดตอัตโนมัติขณะพิมพ์':'Upload a bill photo/PDF or type your units + amount — AI finds the causes and savings, updating live as you type'],
+    ['plug', L?'เครื่องใช้ไฟ':'Appliances', L?'เพิ่มเครื่องใช้ไฟในบ้าน (กำลังไฟ/ชั่วโมงใช้) ยิ่งใส่ครบ ผลวิเคราะห์ยิ่งแม่น':'Add your appliances (watts + hours/day). The more you add, the more accurate the analysis'],
+    ['calculator', L?'จำลองค่าไฟ':'Bill Simulator', L?'ใส่จำนวนหน่วย (kWh) เพื่อดูค่าไฟที่ควรเป็นตามอัตรา MEA/PEA จริง':'Enter your units (kWh) to see the expected bill on real MEA/PEA tariffs'],
+    ['sparkles', 'SmartVolt', L?"ตอบคำถามไลฟ์สไตล์ + เลือกโปรไฟล์ แล้วกด 'วิเคราะห์ด้วย AI' เพื่อดูแผนประหยัดเฉพาะคุณ":"Answer the lifestyle questions, pick a profile, then tap 'Analyze with AI' for a tailored savings plan"],
+    ['user-circle', L?'เข้าสู่ระบบ & เซฟข้อมูล':'Sign in & save', L?'ล็อกอินด้วย Google (มุมขวาบน) เพื่อเซฟทุกอย่างขึ้นคลาวด์ ตามตัวทุกเครื่อง · ออกจากระบบ: กดรูปโปรไฟล์ → "ออกจากระบบ"':'Sign in with Google (top-right) to save everything to the cloud across devices · Sign out: tap your profile → "Sign out"'],
+    ['settings-2', L?'ปรับแต่ง':'Settings', L?'สลับภาษา EN/ไทย, ธีมสว่าง-มืด, สกุลเงิน/หน่วย ได้ที่แถบบน · บนมือถือใช้แถบเมนูด้านล่าง':'Switch language EN/TH, light/dark theme, currency/unit on the top bar · On mobile use the bottom tab bar']
+  ];
+  var rows=items.map(function(it){
+    return '<div class="flex items-start gap-3 py-3 border-t" style="border-color:var(--border-light-col)">'
+      +'<div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--surface-3)"><i data-lucide="'+it[0]+'" class="icon-sm" style="color:#2D7DD2"></i></div>'
+      +'<div><p class="font-800 text-sm" style="color:var(--text-pri)">'+esc(it[1])+'</p><p class="text-xs mt-0.5 leading-relaxed" style="color:var(--text-sec)">'+esc(it[2])+'</p></div></div>';
+  }).join('');
+  var html='<div class="p-6">'
+    +'<div class="flex items-center justify-between mb-1">'
+    +'<h3 class="text-xl font-900" style="color:var(--text-pri)">'+(L?'วิธีใช้งาน':'How to use')+'</h3>'
+    +'<button onclick="closeModal()" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-navy-50" style="color:var(--text-muted-col)" aria-label="Close"><i data-lucide="x" class="icon-sm"></i></button></div>'
+    +'<p class="text-xs mb-1" style="color:var(--text-muted-col)">Anutung Electric · '+(L?'ผู้ช่วยพลังงาน AI':'AI energy advisor')+'</p>'
+    +rows
+    +'<button onclick="closeModal()" class="w-full mt-5 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 text-sm py-3 rounded-xl hover:shadow-md transition-all">'+(L?'เข้าใจแล้ว':'Got it')+'</button>'
+    +'</div>';
+  openModal(html);
+}
 document.getElementById('modalOverlay').addEventListener('click',function(e){ if(e.target.id==='modalOverlay') closeModal(); });
 
 // ── LocalStorage ───────────────────────────────────────
