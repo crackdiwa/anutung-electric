@@ -505,8 +505,6 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
               <span class="text-navy-400 text-sm font-600">kWh</span>
             </div>
             <input type="range" id="bsKwhSlider" min="0" max="2000" step="10" value="300" class="w-full mb-5"/>
-            <label class="block text-navy-600 text-xs font-700 mb-1.5" data-i="bsCategoryLabel"></label>
-            <div class="border border-navy-200 rounded-xl px-4 py-3 bg-navy-50 text-navy-950 font-600 text-sm mb-5" data-i="bsCatResidential"></div>
             <button onclick="calcBillSim()" class="w-full bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 py-3.5 rounded-xl hover:shadow-lg hover:scale-[1.01] transition-all duration-200 flex items-center justify-center gap-2">
               <i data-lucide="calculator" class="icon-sm"></i><span data-i="bsCalcBtn"></span>
             </button>
@@ -1009,6 +1007,7 @@ var state = {
   profile:null, sv:{ usageKwh:300, activeTab:'quick' },
   lifestyle:{ occupation:'', householdSize:3, flags:{ acAllDay:false, gaming:false, waterHeater:false, nightOwl:false, multipleAC:false } },
   billSim:{ kwh:300 },
+  billAnalyzer:{ kwh:'', amount:'', prev:'', monthIdx:null },
   tariff:JSON.parse(JSON.stringify(DEFAULT_TARIFF)),
   handle:'', handleColor:'#0F4C81',
   community:[],
@@ -1109,12 +1108,14 @@ function baComputeCauses(ar,monthIdx){
     ?[{ic:'wind',cat:'ac',pct:48},{ic:'flame',cat:'heating',pct:18},{ic:'utensils',cat:'kitchen',pct:14}]
     :[{ic:'utensils',cat:'kitchen',pct:30},{ic:'wind',cat:'ac',pct:24},{ic:'lightbulb',cat:'lighting',pct:16}];
 }
-function analyzeBill(){
+function analyzeBill(silent){
   var kwh=parseFloat(document.getElementById('baKwh').value);
   var amount=parseFloat(document.getElementById('baAmount').value);
   var prev=parseFloat(document.getElementById('baPrev').value);
   var monthIdx=parseInt(document.getElementById('baMonth').value,10); if(isNaN(monthIdx)) monthIdx=new Date().getMonth();
-  if(!(kwh>0)||!(amount>0)){ baShowError(t('baErrInputs')); return; }
+  // persist the raw inputs so the form refills on return / other devices
+  state.billAnalyzer={kwh:document.getElementById('baKwh').value,amount:document.getElementById('baAmount').value,prev:document.getElementById('baPrev').value,monthIdx:monthIdx};
+  if(!(kwh>0)||!(amount>0)){ if(!silent) baShowError(t('baErrInputs')); saveLS(); return; }
   baHideError();
   var expected=calcTariff(kwh).total;
   var hasPrev=prev>0;
@@ -1129,7 +1130,7 @@ function analyzeBill(){
     expected:expected,overPct:overPct,severity:severity,
     causes:baComputeCauses(getApplianceResults(),monthIdx),savings:savings};
   saveLS();
-  baRenderResult(state.lastBillAnalysis,true);
+  baRenderResult(state.lastBillAnalysis,!silent);
 }
 function baBuildCompareChart(a){
   var cv=document.getElementById('baCompareChart'); if(!cv) return;
@@ -1189,7 +1190,17 @@ function baRenderResult(a,animate){
   baBuildCompareChart(a);
   var askBtn=document.getElementById('baAskBot'); if(askBtn) askBtn.addEventListener('click',function(){baAskEcobot(a);});
 }
-function renderBillAnalyzer(){ baPopulateMonths(); if(state.lastBillAnalysis) baRenderResult(state.lastBillAnalysis,false); }
+function renderBillAnalyzer(){
+  baPopulateMonths();
+  var ba=state.billAnalyzer||{};
+  var k=document.getElementById('baKwh'),a=document.getElementById('baAmount'),p=document.getElementById('baPrev'),m=document.getElementById('baMonth');
+  if(k&&ba.kwh!=null&&ba.kwh!=='') k.value=ba.kwh;
+  if(a&&ba.amount!=null&&ba.amount!=='') a.value=ba.amount;
+  if(p&&ba.prev!=null&&ba.prev!=='') p.value=ba.prev;
+  if(m&&ba.monthIdx!=null) m.value=String(ba.monthIdx);
+  if(state.lastBillAnalysis) baRenderResult(state.lastBillAnalysis,false);
+  else if(parseFloat(ba.kwh)>0&&parseFloat(ba.amount)>0) analyzeBill(true); // regenerate result from saved inputs
+}
 
 // ── Community Handles ───────────────────────────────────
 var HANDLE_POOL=['Smart Volt','Eco Sage','Night Watt','Solar Fox','Grid Ninja','Volt Scout','Amp Rider','Lumen Cat','Kilo Monk','Watt Hawk','Current Fox','Power Sage'];
@@ -1238,6 +1249,7 @@ function saveLS(){
     localStorage.setItem('ae3-community',JSON.stringify(state.community));
     localStorage.setItem('ae3-chat',JSON.stringify(state.chatHistory));
     localStorage.setItem('ae3-lifestyle',JSON.stringify(state.lifestyle));
+    localStorage.setItem('ae3-billanalyzer',JSON.stringify(state.billAnalyzer));
   }catch(e){}
   if(typeof schedulePush==='function') schedulePush();
 }
@@ -1265,6 +1277,8 @@ function loadLS(){
     if(ch) state.chatHistory=ch;
     var ls=JSON.parse(localStorage.getItem('ae3-lifestyle')||'null');
     if(ls) state.lifestyle=Object.assign(state.lifestyle,ls);
+    var ba=JSON.parse(localStorage.getItem('ae3-billanalyzer')||'null');
+    if(ba) state.billAnalyzer=Object.assign(state.billAnalyzer,ba);
   }catch(e){state.handle=genHandle();state.handleColor=colorForHandle(state.handle);}
 }
 
@@ -1301,7 +1315,7 @@ function serializeState(){
   return { v:1,
     settings:{lang:state.lang,currency:state.currency,unit:state.unit,theme:state.theme},
     appliances:state.appliances, nextApId:state.nextApId, tariff:state.tariff,
-    sv:state.sv, billSim:state.billSim, handle:state.handle, handleColor:state.handleColor,
+    sv:state.sv, billSim:state.billSim, billAnalyzer:state.billAnalyzer, handle:state.handle, handleColor:state.handleColor,
     community:state.community, chatHistory:state.chatHistory, lifestyle:state.lifestyle,
     profile:state.profile, lastBillAnalysis:state.lastBillAnalysis||null };
 }
@@ -1314,6 +1328,7 @@ function applyRemoteState(d){
     if(d.tariff){ if(d.tariff.tiers) d.tariff.tiers.forEach(function(t){if(t.max==null||t.max>999998)t.max=999999;}); state.tariff=d.tariff; }
     if(d.sv) state.sv=Object.assign(state.sv,d.sv);
     if(d.billSim) state.billSim=d.billSim;
+    if(d.billAnalyzer) state.billAnalyzer=Object.assign(state.billAnalyzer,d.billAnalyzer);
     if(d.handle){ state.handle=d.handle; state.handleColor=d.handleColor||state.handleColor; }
     if(d.community) state.community=d.community;
     if(d.chatHistory) state.chatHistory=d.chatHistory;
@@ -1481,7 +1496,12 @@ document.querySelectorAll('.mtab').forEach(function(b){
     drop.addEventListener('drop',function(e){ e.preventDefault(); drop.classList.remove('drag'); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) baReadFile(f); });
   }
   var clr=document.getElementById('baClearFile'); if(clr) clr.addEventListener('click',function(e){e.stopPropagation();baClearFile();});
-  var btn=document.getElementById('baAnalyzeBtn'); if(btn) btn.addEventListener('click',analyzeBill);
+  var btn=document.getElementById('baAnalyzeBtn'); if(btn) btn.addEventListener('click',function(){analyzeBill(false);});
+  // Live AI auto-update: re-analyze as the user types / changes inputs
+  var _baTimer=null;
+  function baLive(){ clearTimeout(_baTimer); _baTimer=setTimeout(function(){ analyzeBill(true); },450); }
+  ['baKwh','baAmount','baPrev'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input',baLive); });
+  var mo=document.getElementById('baMonth'); if(mo) mo.addEventListener('change',function(){ analyzeBill(true); });
 })();
 document.getElementById('logoBtn').addEventListener('click',function(){navigateTo('hero');});
 document.getElementById('enterAppBtn').addEventListener('click',function(){navigateTo('dashboard');});
