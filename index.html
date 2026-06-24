@@ -187,19 +187,6 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
 
     <!-- Right: Toggles + Ecobot button -->
     <div class="flex items-center gap-2 ml-auto flex-shrink-0 flex-wrap justify-end">
-      <!-- Language toggle -->
-      <div class="seg" id="segLang" data-group="lang">
-        <div class="seg-pill"></div>
-        <button class="seg-btn" data-val="en">EN</button>
-        <button class="seg-btn" data-val="th">ไทย</button>
-      </div>
-      <!-- Currency toggle -->
-      <div class="seg lg-only" id="segCurrency" data-group="currency">
-        <div class="seg-pill"></div>
-        <button class="seg-btn" data-val="THB">฿</button>
-        <button class="seg-btn" data-val="USD">$</button>
-        <button class="seg-btn" data-val="EUR">€</button>
-      </div>
       <!-- Unit toggle -->
       <div class="seg lg-only" id="segUnit" data-group="unit">
         <div class="seg-pill"></div>
@@ -1005,7 +992,7 @@ var SUPABASE_URL='https://oucxsiqwgzarbgwgzlpl.supabase.co';
 var SUPABASE_ANON_KEY='sb_publishable_nsRMMNssXngjwXQDiaD_XA_IberRlSw';
 
 var state = {
-  lang:'en', currency:'THB', unit:'kWh', theme:'light',
+  lang:'th', currency:'THB', unit:'kWh', theme:'light',
   activeSec:'hero',
   appliances:[], nextApId:1,
   profile:null, sv:{ usageKwh:300, activeTab:'quick' },
@@ -1286,7 +1273,7 @@ function saveLS(){
 function loadLS(){
   try{
     var s=JSON.parse(localStorage.getItem('ae3-settings')||'null');
-    if(s){state.lang=s.lang||'en';state.currency=s.currency||'THB';state.unit=s.unit||'kWh';state.theme=s.theme||'light';}
+    if(s){state.unit=s.unit||'kWh';state.theme=s.theme||'light';} state.lang='th'; state.currency='THB';
     var a=JSON.parse(localStorage.getItem('ae3-appliances')||'null');
     if(a){state.appliances=a.appliances||[];state.nextApId=a.nextApId||1;}
     var tr=JSON.parse(localStorage.getItem('ae3-tariff')||'null');
@@ -1353,7 +1340,7 @@ function applyRemoteState(d){
   if(!d) return;
   _applyingRemote=true;
   try{
-    if(d.settings){ state.lang=d.settings.lang||state.lang; state.currency=d.settings.currency||state.currency; state.unit=d.settings.unit||state.unit; state.theme=d.settings.theme||state.theme; }
+    if(d.settings){ state.unit=d.settings.unit||state.unit; state.theme=d.settings.theme||state.theme; } state.lang='th'; state.currency='THB';
     if(d.appliances){ state.appliances=d.appliances; state.nextApId=d.nextApId||state.nextApId; }
     if(d.tariff){ if(d.tariff.tiers) d.tariff.tiers.forEach(function(t){if(t.max==null||t.max>999998)t.max=999999;}); state.tariff=d.tariff; }
     if(d.sv) state.sv=Object.assign(state.sv,d.sv);
@@ -1367,7 +1354,7 @@ function applyRemoteState(d){
     if(typeof d.lastBillAnalysis!=='undefined') state.lastBillAnalysis=d.lastBillAnalysis;
     saveLS();
     applyTheme(state.theme);
-    if(typeof initSeg==='function'){ initSeg('segLang','lang',state.lang); initSeg('segCurrency','currency',state.currency); initSeg('segUnit','unit',state.unit); }
+    if(typeof initSeg==='function'){ initSeg('segUnit','unit',state.unit); }
     applyStrings();
     renderEverything();
   }catch(e){}
@@ -1501,8 +1488,7 @@ function navigateTo(sec){
   // Mobile bottom tab bar: hide on landing, sync active section
   document.getElementById('mobileTabBar').classList.toggle('hidden',isHero);
   document.querySelectorAll('.mtab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-sec')===sec);});
-  // Declutter: currency/unit toggles are in-app settings — hide them on the landing
-  document.getElementById('segCurrency').classList.toggle('hidden',isHero);
+  // Declutter: unit toggle is an in-app setting — hide it on the landing
   document.getElementById('segUnit').classList.toggle('hidden',isHero);
   // Reposition seg pills now that their visibility changed
   window.dispatchEvent(new Event('resize'));
@@ -2550,8 +2536,6 @@ function init(){
   seedCommunityIfEmpty();
   document.documentElement.lang=state.lang;
   applyTheme(state.theme);
-  initSeg('segLang','lang',state.lang);
-  initSeg('segCurrency','currency',state.currency);
   initSeg('segUnit','unit',state.unit);
   applyStrings();
   navigateTo('hero');
