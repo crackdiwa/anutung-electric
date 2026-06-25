@@ -794,6 +794,7 @@ en:{
   svAiBottomLine:'Total potential savings', svAiSaveYear:'up to {amt}/year',
   authSignIn:'Sign in', authSignInGoogle:'Sign in with Google', authSignOut:'Sign out',
   authSyncing:'Syncing…', authSynced:'Synced to cloud', authSyncError:'Sync error',
+  bsRateSimple:'Simple', bsRateDetailed:'Detailed', bsFlatRate:'Price per unit (฿/kWh)', bsFlatHint:'Tip: total amount ÷ units from your bill',
   heroBadge:'AI-Powered Energy Intelligence for Thai Homes',
   heroTitle:'Take Control of Your', heroTitleAccent:'Electricity Bill',
   heroSub:'Track every watt, simulate your Thai electricity bill with real MEA/PEA tariffs, and unlock AI-powered savings strategies tailored to your lifestyle.',
@@ -904,6 +905,7 @@ th:{
   svAiBottomLine:'ประหยัดได้สูงสุดรวม', svAiSaveYear:'สูงสุด {amt}/ปี',
   authSignIn:'เข้าสู่ระบบ', authSignInGoogle:'เข้าสู่ระบบด้วย Google', authSignOut:'ออกจากระบบ',
   authSyncing:'กำลังซิงค์…', authSynced:'ซิงค์ขึ้นคลาวด์แล้ว', authSyncError:'ซิงค์ผิดพลาด',
+  bsRateSimple:'ง่าย', bsRateDetailed:'ละเอียด', bsFlatRate:'ราคาต่อหน่วย (฿/kWh)', bsFlatHint:'เคล็ดลับ: เอายอดเงินรวม ÷ จำนวนหน่วย จากบิล',
   heroBadge:'ระบบอัจฉริยะประหยัดพลังงานสำหรับบ้านไทย',
   heroTitle:'ควบคุม', heroTitleAccent:'ค่าไฟของคุณ',
   heroSub:'ติดตามทุกวัตต์ จำลองค่าไฟตามอัตรา MEA/PEA จริงของไทย และรับแผนประหยัดพลังงานเฉพาะบุคคลจาก AI',
@@ -981,7 +983,7 @@ th:{
 };
 
 // ── Application State ───────────────────────────────────
-var DEFAULT_TARIFF = { tiers:[{max:150,rate:3.2484},{max:400,rate:4.2218},{max:999999,rate:4.4217}], serviceFee:8.19, ft:0.8232, vatPct:7 };
+var DEFAULT_TARIFF = { flat:false, flatRate:4.4, tiers:[{max:150,rate:3.2484},{max:400,rate:4.2218},{max:999999,rate:4.4217}], serviceFee:8.19, ft:0.8232, vatPct:7 };
 // ═══════════════════════════════════════════════════════════════════
 // SUPABASE CONFIG — paste your project values here to enable cloud
 // login (Google) + cross-device sync. Leave blank = app runs as guest
@@ -1028,7 +1030,9 @@ function timeAgo(ts){ var d=Math.floor((Date.now()-ts)/1000); if(d<60)return t('
 // ── Tariff Engine ───────────────────────────────────────
 function calcTariff(kwh){
   kwh=Math.max(0,kwh||0);
-  var T=state.tariff, remaining=kwh, base=0, prevMax=0, breakdown=[];
+  var T=state.tariff;
+  if(T.flat){ var fr=T.flatRate||0, tot=kwh*fr; return {kwh:kwh,base:tot,serviceFee:0,ftCost:0,subtotal:tot,vat:0,total:tot,breakdown:[{from:1,to:null,rate:fr,kwh:kwh,cost:tot}]}; }
+  var remaining=kwh, base=0, prevMax=0, breakdown=[];
   T.tiers.forEach(function(tier){
     var bandKwh=Math.max(0,Math.min(remaining,tier.max-prevMax));
     var bandCost=bandKwh*tier.rate;
@@ -1851,30 +1855,46 @@ function renderBillSim(){
 function renderTariffConfig(){
   var cf=document.getElementById('bsConfigFields'); if(!cf) return;
   var T=state.tariff;
-  var fields=[
-    {id:'cfT1Rate',label:t('bsTier1Rate'),val:T.tiers[0].rate,step:.0001},
-    {id:'cfT2Rate',label:t('bsTier2Rate'),val:T.tiers[1].rate,step:.0001},
-    {id:'cfT3Rate',label:t('bsTier3Rate'),val:T.tiers[2].rate,step:.0001},
-    {id:'cfFt',label:t('bsFtDefault'),val:T.ft,step:.0001},
-    {id:'cfService',label:t('bsServiceFeeLabel'),val:T.serviceFee,step:.01},
-    {id:'cfVat',label:t('bsVatPctLabel'),val:T.vatPct,step:1},
-  ];
-  cf.innerHTML=fields.map(function(f){
+  var flat=!!T.flat;
+  var btn=function(on,fn,lbl){ return '<button type="button" onclick="'+fn+'" class="flex-1 text-xs font-700 py-2 rounded-lg border-2 transition-colors '+(on?'bg-navy-500 text-white border-navy-500':'border-navy-200 text-navy-500 hover:bg-navy-50')+'">'+esc(lbl)+'</button>'; };
+  var modeToggle='<div class="flex gap-2 mb-4">'+btn(flat,'setTariffMode(true)',t('bsRateSimple'))+btn(!flat,'setTariffMode(false)',t('bsRateDetailed'))+'</div>';
+  var fields = flat
+    ? [{id:'cfFlatRate',label:t('bsFlatRate'),val:(T.flatRate!=null?T.flatRate:4.4),step:.01}]
+    : [
+      {id:'cfT1Rate',label:t('bsTier1Rate'),val:T.tiers[0].rate,step:.0001},
+      {id:'cfT2Rate',label:t('bsTier2Rate'),val:T.tiers[1].rate,step:.0001},
+      {id:'cfT3Rate',label:t('bsTier3Rate'),val:T.tiers[2].rate,step:.0001},
+      {id:'cfFt',label:t('bsFtDefault'),val:T.ft,step:.0001},
+      {id:'cfService',label:t('bsServiceFeeLabel'),val:T.serviceFee,step:.01},
+      {id:'cfVat',label:t('bsVatPctLabel'),val:T.vatPct,step:1}
+    ];
+  cf.innerHTML=modeToggle+fields.map(function(f){
     return '<div class="flex items-center justify-between gap-4">'
       +'<label class="text-navy-600 text-xs font-600 flex-1">'+esc(f.label)+'</label>'
       +'<input type="number" id="'+f.id+'" value="'+f.val+'" step="'+f.step+'" class="w-28 border border-navy-200 rounded-xl px-3 py-2 text-navy-950 font-700 text-sm text-right bg-navy-50 focus:border-navy-500 transition-colors"/>'
       +'</div>';
-  }).join('');
+  }).join('')+(flat?'<p class="text-navy-300 text-[11px] mt-2">'+esc(t('bsFlatHint'))+'</p>':'');
+}
+function setTariffMode(flat){
+  state.tariff.flat=!!flat;
+  if(flat&&state.tariff.flatRate==null) state.tariff.flatRate=4.4;
+  saveLS(); renderTariffConfig();
 }
 function saveTariffConfig(){
-  var v=function(id){return parseFloat(document.getElementById(id).value)||0;};
-  state.tariff.tiers[0].rate=v('cfT1Rate');
-  state.tariff.tiers[1].rate=v('cfT2Rate');
-  state.tariff.tiers[2].rate=v('cfT3Rate');
-  state.tariff.ft=v('cfFt');
-  state.tariff.serviceFee=v('cfService');
-  state.tariff.vatPct=v('cfVat');
+  var v=function(id){var el=document.getElementById(id);return el?(parseFloat(el.value)||0):0;};
+  if(state.tariff.flat){
+    state.tariff.flatRate=v('cfFlatRate');
+  } else {
+    state.tariff.tiers[0].rate=v('cfT1Rate');
+    state.tariff.tiers[1].rate=v('cfT2Rate');
+    state.tariff.tiers[2].rate=v('cfT3Rate');
+    state.tariff.ft=v('cfFt');
+    state.tariff.serviceFee=v('cfService');
+    state.tariff.vatPct=v('cfVat');
+  }
   saveLS();showToast(t('bsConfigSaved'));
+  var rc=document.getElementById('bsResultCard');
+  if(rc&&!rc.classList.contains('hidden')) calcBillSim(); // refresh shown result with new rate
 }
 function resetTariff(){
   state.tariff=JSON.parse(JSON.stringify(DEFAULT_TARIFF));
