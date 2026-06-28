@@ -13,7 +13,10 @@
         colors: {
           navy: { 50:'#E6F0FF',100:'#CCE1FF',200:'#99C3FF',300:'#66A5FF',400:'#2D7DD2',500:'#0F4C81',600:'#0C3E6B',700:'#093055',800:'#06223F',900:'#031428',950:'#0A2540' },
         },
-        fontFamily: { sans:['Prompt','ui-sans-serif','system-ui'] },
+        fontFamily: { sans:['Noto Sans','Noto Sans Thai','ui-sans-serif','system-ui'] },
+        // Numeric weight utilities (font-300 … font-900) — the markup uses these
+        // throughout; without registering them they silently fell back to 400.
+        fontWeight: { 300:'300',400:'400',500:'500',600:'600',700:'700',800:'800',900:'900' },
         transitionTimingFunction: { spring:'cubic-bezier(0.34,1.56,0.64,1)', spring2:'cubic-bezier(0.22,1.1,0.36,1)' },
         keyframes: {
           fadeUp:  { '0%':{opacity:'0',transform:'translateY(20px)'},'100%':{opacity:'1',transform:'translateY(0)'} },
@@ -34,7 +37,7 @@
   }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&family=Noto+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- Spline 3D viewer (vanilla web component) -->
@@ -44,7 +47,7 @@
 <style>
 :root{ --navy-950:#0A2540; --navy-500:#0F4C81; --navy-50:#E6F0FF; }
 *,::before,::after{box-sizing:border-box}
-body{font-family:'Prompt',ui-sans-serif,system-ui,sans-serif;background:#f8faff;color:#0A2540;overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:'Noto Sans','Noto Sans Thai',ui-sans-serif,system-ui,sans-serif;background:#f8faff;color:#0A2540;overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#CCE1FF;border-radius:99px}
@@ -128,7 +131,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
 [data-theme="dark"] .skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%}
 [data-theme="dark"] ::-webkit-scrollbar-thumb{background:var(--border-col)}
 /* Thai font */
-[data-lang="th"] body,[data-lang="th"] .seg-btn,[data-lang="th"] .tab-btn,[data-lang="th"] .feat-pill,[data-lang="th"] .mtab{font-family:'Prompt',ui-sans-serif,system-ui,sans-serif!important}
+[data-lang="th"] body,[data-lang="th"] .seg-btn,[data-lang="th"] .tab-btn,[data-lang="th"] .feat-pill,[data-lang="th"] .mtab{font-family:'Noto Sans Thai','Noto Sans',ui-sans-serif,system-ui,sans-serif!important}
 [data-lang="th"] body{line-height:1.72;letter-spacing:.1px}
 /* ═══ MOBILE BOTTOM TAB BAR ═══ */
 .mtab-bar{background:var(--surface);border-top:1px solid var(--border-col);box-shadow:0 -3px 18px rgba(10,37,64,.07);padding-bottom:env(safe-area-inset-bottom);transition:background-color .3s ease,border-color .3s ease}
@@ -1176,7 +1179,7 @@ var state = {
 function isDarkMode(){ return document.documentElement.getAttribute('data-theme')==='dark'; }
 function chartTextColor(){ return isDarkMode()?'#4A6A90':'#99C3FF'; }
 function chartGridColor(){ return isDarkMode()?'rgba(30,51,85,0.4)':'rgba(230,240,255,0.8)'; }
-function chartFontFamily(){ return "Prompt, ui-sans-serif, system-ui, sans-serif"; }
+function chartFontFamily(){ return "'Noto Sans Thai', 'Noto Sans', ui-sans-serif, system-ui, sans-serif"; }
 
 // ── I18n ───────────────────────────────────────────────
 function t(k){ return (STRINGS[state.lang]&&STRINGS[state.lang][k])||STRINGS.en[k]||k; }
