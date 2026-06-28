@@ -13,7 +13,7 @@
         colors: {
           navy: { 50:'#E6F0FF',100:'#CCE1FF',200:'#99C3FF',300:'#66A5FF',400:'#2D7DD2',500:'#0F4C81',600:'#0C3E6B',700:'#093055',800:'#06223F',900:'#031428',950:'#0A2540' },
         },
-        fontFamily: { sans:['Plus Jakarta Sans','ui-sans-serif','system-ui'] },
+        fontFamily: { sans:['Prompt','ui-sans-serif','system-ui'] },
         transitionTimingFunction: { spring:'cubic-bezier(0.34,1.56,0.64,1)', spring2:'cubic-bezier(0.22,1.1,0.36,1)' },
         keyframes: {
           fadeUp:  { '0%':{opacity:'0',transform:'translateY(20px)'},'100%':{opacity:'1',transform:'translateY(0)'} },
@@ -34,7 +34,7 @@
   }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- Spline 3D viewer (vanilla web component) -->
@@ -44,7 +44,7 @@
 <style>
 :root{ --navy-950:#0A2540; --navy-500:#0F4C81; --navy-50:#E6F0FF; }
 *,::before,::after{box-sizing:border-box}
-body{font-family:'Plus Jakarta Sans','IBM Plex Sans Thai',sans-serif;background:#f8faff;color:#0A2540;overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:'Prompt',ui-sans-serif,system-ui,sans-serif;background:#f8faff;color:#0A2540;overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#CCE1FF;border-radius:99px}
@@ -128,7 +128,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
 [data-theme="dark"] .skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%}
 [data-theme="dark"] ::-webkit-scrollbar-thumb{background:var(--border-col)}
 /* Thai font */
-[data-lang="th"] body,[data-lang="th"] .seg-btn,[data-lang="th"] .tab-btn,[data-lang="th"] .feat-pill,[data-lang="th"] .mtab{font-family:'IBM Plex Sans Thai','Plus Jakarta Sans',sans-serif!important}
+[data-lang="th"] body,[data-lang="th"] .seg-btn,[data-lang="th"] .tab-btn,[data-lang="th"] .feat-pill,[data-lang="th"] .mtab{font-family:'Prompt',ui-sans-serif,system-ui,sans-serif!important}
 [data-lang="th"] body{line-height:1.72;letter-spacing:.1px}
 /* ═══ MOBILE BOTTOM TAB BAR ═══ */
 .mtab-bar{background:var(--surface);border-top:1px solid var(--border-col);box-shadow:0 -3px 18px rgba(10,37,64,.07);padding-bottom:env(safe-area-inset-bottom);transition:background-color .3s ease,border-color .3s ease}
@@ -213,6 +213,20 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
     </div>
   </div>
 </header>
+
+<!-- ═══ GUEST-MODE BANNER (shown to signed-out users inside the app) ═══ -->
+<div id="guestBanner" class="hidden">
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6">
+    <div class="guest-banner-inner">
+      <i data-lucide="cloud-off" class="icon-sm flex-shrink-0"></i>
+      <span class="flex-1 leading-snug" data-i="guestBannerText"></span>
+      <button id="guestBannerSignin" class="guest-banner-btn">
+        <i data-lucide="log-in" class="icon-xs"></i><span data-i="guestBannerCta"></span>
+      </button>
+      <button id="guestBannerClose" class="guest-banner-x" aria-label="Dismiss"><i data-lucide="x" class="icon-xs"></i></button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MAIN ═══ -->
 <main id="appMain" class="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 pb-24 lg:pb-8">
@@ -711,6 +725,152 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
 [data-theme="dark"] .land-feat-icon{background:var(--surface-3)!important;color:var(--text-sec)!important}
 [data-theme="dark"] .land-step-num{background:var(--surface-3)!important;color:var(--text-sec)!important}
 [data-theme="dark"] .land-grid-bg{background-image:radial-gradient(rgba(138,174,212,.08) 1px,transparent 1px)}
+
+/* ════════════════════════════════════════════════════════════
+   PRO DEPTH LAYER — "หนา · นูน · อ่านง่าย · มืออาชีพ"
+   Adds tactile, embossed depth + crisper typography + mobile
+   ergonomics on top of the existing layout (no structure changes).
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --emboss-top: inset 0 1px 0 rgba(255,255,255,.85);
+  --ring-soft: 0 1px 2px rgba(10,37,64,.05);
+  --shadow-card: 0 1px 2px rgba(10,37,64,.06), 0 6px 16px -6px rgba(10,37,64,.12), 0 18px 40px -24px rgba(10,37,64,.22);
+  --shadow-card-hover: 0 2px 4px rgba(10,37,64,.08), 0 12px 28px -8px rgba(15,76,129,.22), 0 28px 60px -28px rgba(15,76,129,.30);
+  --shadow-btn: 0 1px 1px rgba(255,255,255,.4) inset, 0 2px 6px rgba(15,76,129,.28), 0 8px 20px -6px rgba(15,76,129,.42);
+  --shadow-btn-press: 0 1px 2px rgba(15,76,129,.30);
+}
+[data-theme="dark"]{
+  --emboss-top: inset 0 1px 0 rgba(255,255,255,.06);
+  --ring-soft: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 10px 26px -10px rgba(0,0,0,.6);
+  --shadow-card-hover: 0 2px 6px rgba(0,0,0,.5), 0 18px 40px -14px rgba(0,0,0,.7);
+  --shadow-btn: 0 1px 0 rgba(255,255,255,.08) inset, 0 4px 14px -4px rgba(0,0,0,.7);
+  --shadow-btn-press: 0 1px 3px rgba(0,0,0,.6);
+}
+
+/* Sharper text rendering everywhere */
+body{ text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
+
+/* ── Header: more presence ── */
+header.sticky{ box-shadow:0 1px 0 rgba(204,225,255,.6), 0 6px 22px -12px rgba(10,37,64,.28); }
+[data-theme="dark"] header.sticky{ box-shadow:0 1px 0 var(--border-col), 0 8px 24px -12px rgba(0,0,0,.7); }
+
+/* ── Raised / embossed cards ── */
+main .bg-white.rounded-2xl,
+main .bg-white.rounded-3xl,
+.stat-card{
+  box-shadow:var(--emboss-top), var(--shadow-card) !important;
+  border-width:1.5px;
+}
+.stat-card{ border-radius:18px; }
+.card-spring:hover, .land-feat:hover{ box-shadow:var(--emboss-top), var(--shadow-card-hover) !important; }
+/* Dark cards: drop the bright top highlight handled by token already */
+
+/* Dark-navy gradient panels (totals / CTA) get a richer inner glow */
+.blue-grad, .bg-gradient-to-br.from-navy-950, .bg-gradient-to-r.from-navy-950{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 10px 30px -10px rgba(10,37,64,.55), 0 2px 6px rgba(10,37,64,.25) !important;
+}
+
+/* ── Buttons: convex, tactile, with a real press ── */
+button[class*="from-navy-500"], a[class*="from-navy-500"],
+button[class*="from-navy-400"]{
+  box-shadow:var(--shadow-btn) !important;
+  position:relative;
+}
+button[class*="from-navy-500"]:hover, a[class*="from-navy-500"]:hover{
+  filter:brightness(1.04);
+}
+button[class*="from-navy-500"]:active, a[class*="from-navy-500"]:active,
+button[class*="from-navy-400"]:active{
+  transform:translateY(1px) scale(.995) !important;
+  box-shadow:var(--shadow-btn-press) !important;
+  filter:brightness(.98);
+}
+/* White / outline buttons get a subtle lift too */
+.bg-white.text-navy-950{ box-shadow:var(--emboss-top), 0 6px 18px -8px rgba(10,37,64,.35) !important; }
+
+/* Small square icon toggles (theme/help/ecobot) — embossed chips */
+#themeToggle, #helpBtn, #ecobotToggle{ box-shadow:var(--ring-soft), var(--emboss-top); }
+#themeToggle:active, #helpBtn:active, #ecobotToggle:active{ transform:translateY(1px) scale(.96); }
+
+/* ── Inputs: deeper, inset feel + readable ── */
+.ba-input, #bsKwh, input[type=number], input[type=text], textarea, select{
+  box-shadow:inset 0 1px 2px rgba(10,37,64,.06);
+}
+.ba-input:focus, input:focus, textarea:focus, select:focus{
+  box-shadow:inset 0 1px 2px rgba(10,37,64,.06), 0 0 0 3px rgba(45,125,210,.18);
+}
+[data-theme="dark"] .ba-input, [data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select{
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+}
+
+/* ── Segmented control & nav pills: a touch more depth ── */
+.seg{ box-shadow:inset 0 1px 2px rgba(10,37,64,.06); }
+.seg-pill{ box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 2px 8px rgba(15,76,129,.4) !important; }
+.nav-link{ font-weight:700; }
+.nav-link.active{ box-shadow:var(--ring-soft); }
+
+/* ── Range slider: chunkier, grippier thumb ── */
+input[type=range]{ height:8px; }
+input[type=range]::-webkit-slider-thumb{ width:26px;height:26px;border:3px solid #fff;box-shadow:0 2px 10px rgba(15,76,129,.5),0 0 0 1px rgba(15,76,129,.2); }
+[data-theme="dark"] input[type=range]::-webkit-slider-thumb{ border-color:var(--surface); }
+
+/* ── Guest banner ── */
+#guestBanner{ position:sticky; top:64px; z-index:30; padding:8px 0; }
+.guest-banner-inner{
+  display:flex; align-items:center; gap:10px;
+  background:linear-gradient(135deg,#0F4C81,#2D7DD2); color:#fff;
+  padding:10px 14px; border-radius:14px; font-size:13px; font-weight:700;
+  box-shadow:0 8px 22px -10px rgba(15,76,129,.6), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.guest-banner-btn{
+  display:inline-flex; align-items:center; gap:6px; flex-shrink:0;
+  background:#fff; color:#0F4C81; font-weight:800; font-size:12.5px;
+  padding:7px 13px; border-radius:10px; border:none; cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.18); transition:transform .15s ease, box-shadow .2s ease;
+}
+.guest-banner-btn:hover{ transform:translateY(-1px); box-shadow:0 5px 14px rgba(0,0,0,.25); }
+.guest-banner-btn:active{ transform:translateY(0); }
+.guest-banner-x{ flex-shrink:0; width:28px;height:28px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease; }
+.guest-banner-x:hover{ background:rgba(255,255,255,.32); }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE ERGONOMICS — easy to tap, easy to read on a phone
+   ════════════════════════════════════════════════════════════ */
+@media(max-width:1023px){
+  /* Prevent iOS auto-zoom & give thumbs more room */
+  input[type=number], input[type=text], textarea, select, .ba-input, #bsKwh{
+    font-size:16px !important; padding-top:12px; padding-bottom:12px; min-height:48px;
+  }
+  /* Comfortable hit targets for the top-bar icon buttons */
+  #themeToggle, #helpBtn, #ecobotToggle{ width:42px !important; height:42px !important; }
+  /* Section headings scale down a notch so they don't wrap awkwardly */
+  main h1.text-3xl{ font-size:1.6rem; line-height:1.2; }
+  .text-4xl{ font-size:2rem !important; }
+  .text-5xl{ font-size:2.35rem !important; }
+  /* Primary CTAs span comfortably & are easy to press */
+  #heroStartBtn, #heroSimBtn{ flex:1 1 100%; justify-content:center; padding-top:15px; padding-bottom:15px; }
+  /* Cards: a bit tighter padding to maximise content width */
+  main .bg-white.rounded-2xl{ padding:18px !important; }
+  /* Bottom tab bar: bigger, clearer, full thumb targets */
+  .mtab{ padding:9px 2px 8px; min-height:58px; }
+  .mtab .icon-md{ width:23px; height:23px; }
+  .mtab span{ font-size:10.5px; }
+  .mtab-bar{ box-shadow:0 -4px 24px rgba(10,37,64,.12); }
+  .mtab.active{ background:rgba(45,125,210,.10); }
+  /* Guest banner sits just under the navbar on mobile */
+  #guestBanner{ top:64px; }
+  .guest-banner-inner{ font-size:12px; padding:9px 12px; gap:8px; flex-wrap:wrap; }
+  .guest-banner-btn span{ display:inline; }
+  /* Ecobot FAB clears the tab bar */
+  #ecobotFab{ bottom:78px; }
+  /* Slightly larger body text for readability */
+  body{ font-size:15px; }
+}
+@media(max-width:380px){
+  .guest-banner-btn span{ display:none; }    /* icon-only on very small screens */
+  .mtab span{ font-size:9.5px; }
+}
 </style>
 
 <script>
@@ -760,6 +920,8 @@ var PATHWAYS = {
 var STRINGS = {
 en:{
   brandName:'Anutung Electric', perMonth:'/month', perYear:'/year',
+  guestBannerText:"You're in guest mode — your settings won't be saved when you leave. Sign in to keep them.",
+  guestBannerCta:'Sign in to save',
   navDashboard:'Dashboard', navAppliances:'Appliances', navBillSim:'Bill Simulator', navSmartVolt:'SmartVolt', navCommunity:'Community',
   tabDashboard:'Dashboard', tabAppliances:'Devices', tabBillSim:'Simulator', tabSmartVolt:'SmartVolt', tabCommunity:'Community',
   navAnalyzer:'Bill Analyzer',
@@ -871,6 +1033,8 @@ en:{
 },
 th:{
   brandName:'Anutung Electric', perMonth:'/เดือน', perYear:'/ปี',
+  guestBannerText:'คุณกำลังใช้งานแบบผู้เยี่ยมชม — ค่าที่ตั้งไว้จะไม่ถูกบันทึกเมื่อออกจากเว็บ เข้าสู่ระบบเพื่อบันทึกไว้',
+  guestBannerCta:'เข้าสู่ระบบเพื่อบันทึก',
   navDashboard:'แดชบอร์ด', navAppliances:'ติดตามเครื่องใช้ไฟฟ้า', navBillSim:'จำลองค่าไฟ', navSmartVolt:'SmartVolt', navCommunity:'ชุมชน',
   tabDashboard:'แดชบอร์ด', tabAppliances:'อุปกรณ์', tabBillSim:'จำลองบิล', tabSmartVolt:'SmartVolt', tabCommunity:'ชุมชน',
   navAnalyzer:'วิเคราะห์บิล',
@@ -1012,7 +1176,7 @@ var state = {
 function isDarkMode(){ return document.documentElement.getAttribute('data-theme')==='dark'; }
 function chartTextColor(){ return isDarkMode()?'#4A6A90':'#99C3FF'; }
 function chartGridColor(){ return isDarkMode()?'rgba(30,51,85,0.4)':'rgba(230,240,255,0.8)'; }
-function chartFontFamily(){ return "Plus Jakarta Sans, 'IBM Plex Sans Thai', sans-serif"; }
+function chartFontFamily(){ return "Prompt, ui-sans-serif, system-ui, sans-serif"; }
 
 // ── I18n ───────────────────────────────────────────────
 function t(k){ return (STRINGS[state.lang]&&STRINGS[state.lang][k])||STRINGS.en[k]||k; }
@@ -1258,9 +1422,19 @@ function openHelp(){
 }
 document.getElementById('modalOverlay').addEventListener('click',function(e){ if(e.target.id==='modalOverlay') closeModal(); });
 
-// ── LocalStorage ───────────────────────────────────────
+// ── LocalStorage (login-gated) ─────────────────────────
+// Persistence rule: ONLY signed-in users get their settings saved.
+//  • Guests can use every feature in-session, but nothing is written to
+//    storage — reloading starts fresh (as requested).
+//  • Signed-in users keep a local cache (for instant load) AND sync to the
+//    cloud, so their data survives reloads and follows them across devices.
+var LS_KEYS=['ae3-auth','ae3-settings','ae3-appliances','ae3-tariff','ae3-sv','ae3-billsim','ae3-handle','ae3-community','ae3-chat','ae3-lifestyle','ae3-billanalyzer'];
+function clearLocalCache(){ LS_KEYS.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} }); }
 function saveLS(){
+  // Guests: do not persist anything locally — only push to cloud if (later) signed in.
+  if(!authUser){ if(typeof schedulePush==='function') schedulePush(); return; }
   try{
+    localStorage.setItem('ae3-auth',authUser.id);
     localStorage.setItem('ae3-settings',JSON.stringify({lang:state.lang,currency:state.currency,unit:state.unit,theme:state.theme}));
     localStorage.setItem('ae3-appliances',JSON.stringify({appliances:state.appliances,nextApId:state.nextApId}));
     localStorage.setItem('ae3-tariff',JSON.stringify(state.tariff));
@@ -1276,6 +1450,11 @@ function saveLS(){
 }
 function loadLS(){
   try{
+    // No auth marker → previous session was a guest (or first visit): start clean.
+    if(!localStorage.getItem('ae3-auth')){
+      state.handle=genHandle(); state.handleColor=colorForHandle(state.handle);
+      return;
+    }
     var s=JSON.parse(localStorage.getItem('ae3-settings')||'null');
     if(s){state.unit=s.unit||'kWh';state.theme=s.theme||'light';} state.lang='th'; state.currency='THB';
     var a=JSON.parse(localStorage.getItem('ae3-appliances')||'null');
@@ -1320,6 +1499,7 @@ function initAuth(){
   sb.auth.getSession().then(function(res){
     authUser=(res.data&&res.data.session)?res.data.session.user:null;
     renderAuthUI();
+    updateGuestBanner();
     if(authUser) pullRemoteState();
   });
   sb.auth.onAuthStateChange(function(event,session){
@@ -1327,6 +1507,9 @@ function initAuth(){
     authUser=session?session.user:null;
     renderAuthUI();
     if(authUser&&authUser.id!==was) pullRemoteState();
+    // Signed out: drop the local cache so a reload starts as a fresh guest.
+    if(!authUser&&was) clearLocalCache();
+    updateGuestBanner();
   });
 }
 function signInGoogle(){ if(sb) sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href.split('#')[0].split('?')[0]}}); }
@@ -1424,6 +1607,26 @@ function renderAuthUI(){
   }
 }
 
+// ── Guest-mode banner ──────────────────────────────────
+function updateGuestBanner(){
+  var b=document.getElementById('guestBanner'); if(!b) return;
+  var isHero=state.activeSec==='hero';
+  // Show only when Supabase is configured, the visitor is signed out,
+  // they're inside the app (not the landing), and they haven't dismissed it.
+  var show=!!sb && !authUser && !isHero && b.getAttribute('data-dismissed')!=='1';
+  b.classList.toggle('hidden',!show);
+  if(show) lucide.createIcons({nodes:[b]});
+}
+(function(){
+  var close=document.getElementById('guestBannerClose');
+  if(close) close.addEventListener('click',function(){
+    var b=document.getElementById('guestBanner');
+    if(b){ b.setAttribute('data-dismissed','1'); b.classList.add('hidden'); }
+  });
+  var si=document.getElementById('guestBannerSignin');
+  if(si) si.addEventListener('click',function(){ if(typeof signInGoogle==='function') signInGoogle(); });
+})();
+
 // ── Theme ──────────────────────────────────────────────
 function applyTheme(theme){
   state.theme=theme||'light';
@@ -1497,6 +1700,7 @@ function navigateTo(sec){
   // Reposition seg pills now that their visibility changed
   window.dispatchEvent(new Event('resize'));
   window.scrollTo({top:0,behavior:'smooth'});
+  if(typeof updateGuestBanner==='function') updateGuestBanner();
   if(typeof onSection==='function') onSection(sec);
 }
 document.querySelectorAll('.nav-link').forEach(function(a){
