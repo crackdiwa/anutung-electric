@@ -972,7 +972,8 @@ en:{
   svApNameLbl:'Appliance', svApAdd:'Add', svApEmpty:'No appliances added yet — add a few to personalise your plan.',
   svApUseToggle:'Use my appliances for the analysis', svApTotal:'Total from your appliances', svApAdded:'Appliance added!', svApSynced:'Now analysing your real appliance usage.',
   svTrackTitle:'Track your results', svTrackSub:'Tried the advice? Log your new bill — the AI learns from it and adjusts your plan.',
-  svTrackFollowed:'What did you try?', svTrackBefore:'Bill before (฿)', svTrackAfter:'New bill after (฿)', svTrackSaveBtn:'Log this result',
+  svTrackFollowed:'Which AI tips did you try? (or add your own)', svTrackBefore:'Bill before (฿)', svTrackAfter:'New bill after (฿)', svTrackSaveBtn:'Log this result',
+  svCustomPh:'Write something you tried yourself…', svCustomAdd:'Add', svTrackAiHint:'These options come from what the AI recommended.', svTrackNoRecs:'Tap “Analyze with AI” above to get tips to track — or write your own below.',
   svTrackHistory:'Your progress', svTrackEmpty:'No results logged yet. Try a tip, then record your new bill here to see if it worked.',
   svTrackWorked:'Worked! Saved {amt} ({pct}%)', svTrackPartial:'Partly worked — saved {amt} ({pct}%)', svTrackNone:'No savings yet ({pct}%)',
   svTrackExpected:'target was {pct}%', svTrackReanalyze:'Re-analyze with my results', svTrackErr:'Enter your new bill amount first.', svTrackSaved:'Result logged — nice work!',
@@ -1104,7 +1105,8 @@ th:{
   svApNameLbl:'อุปกรณ์', svApAdd:'เพิ่ม', svApEmpty:'ยังไม่ได้เพิ่มอุปกรณ์ — เพิ่มสักหน่อยเพื่อให้แผนเฉพาะคุณ',
   svApUseToggle:'ใช้ข้อมูลอุปกรณ์ของฉันในการวิเคราะห์', svApTotal:'รวมจากอุปกรณ์ของคุณ', svApAdded:'เพิ่มอุปกรณ์แล้ว!', svApSynced:'กำลังวิเคราะห์จากการใช้ไฟจริงของอุปกรณ์คุณ',
   svTrackTitle:'ติดตามผลลัพธ์', svTrackSub:'ลองทำตามคำแนะนำแล้ว? บันทึกบิลใหม่ของคุณ — AI จะเรียนรู้และปรับแผนให้',
-  svTrackFollowed:'คุณลองทำอะไรบ้าง?', svTrackBefore:'บิลก่อนหน้า (฿)', svTrackAfter:'บิลใหม่หลังทำตาม (฿)', svTrackSaveBtn:'บันทึกผลนี้',
+  svTrackFollowed:'คุณลองทำเคล็ดลับไหนของ AI บ้าง? (หรือเขียนเพิ่มเอง)', svTrackBefore:'บิลก่อนหน้า (฿)', svTrackAfter:'บิลใหม่หลังทำตาม (฿)', svTrackSaveBtn:'บันทึกผลนี้',
+  svCustomPh:'เขียนสิ่งที่คุณลองทำเอง…', svCustomAdd:'เพิ่ม', svTrackAiHint:'ตัวเลือกเหล่านี้มาจากคำแนะนำที่ AI บอก', svTrackNoRecs:'กด “วิเคราะห์ด้วย AI” ด้านบนเพื่อรับเคล็ดลับมาติดตาม — หรือเขียนเองด้านล่าง',
   svTrackHistory:'ความคืบหน้าของคุณ', svTrackEmpty:'ยังไม่มีผลที่บันทึกไว้ ลองทำตามเคล็ดลับ แล้วบันทึกบิลใหม่ที่นี่เพื่อดูว่าได้ผลไหม',
   svTrackWorked:'ได้ผล! ประหยัด {amt} ({pct}%)', svTrackPartial:'ได้ผลบางส่วน — ประหยัด {amt} ({pct}%)', svTrackNone:'ยังไม่ประหยัด ({pct}%)',
   svTrackExpected:'เป้าหมาย {pct}%', svTrackReanalyze:'ให้ AI วิเคราะห์ใหม่จากผลจริง', svTrackErr:'กรอกยอดบิลใหม่ก่อน', svTrackSaved:'บันทึกผลแล้ว — เยี่ยมมาก!',
@@ -2952,14 +2954,16 @@ function svComputeAdjustment(){
 }
 function renderSvTracking(){
   var el=document.getElementById('svTrackingPanel'); if(!el) return;
-  var k=state.sv.activeTab||'quick';
-  var items=getPathwayItems(k);
-  var curBill=calcTariff(state.sv.usageKwh).total;
-  var checks=items.map(function(it,i){
+  // Options to tick come from what the AI actually recommended (svAnalyze)
+  var ana=svAnalyze();
+  var curBill=ana.bill||calcTariff(state.sv.usageKwh).total;
+  var aiRecs=ana.recs||[];
+  var checks=aiRecs.length?aiRecs.map(function(it,i){
+    var pct=curBill>0?Math.max(0,Math.round(it.baht/curBill*100)):0;
     return '<label class="flex items-start gap-2 py-1.5 cursor-pointer">'
-      +'<input type="checkbox" class="sv-track-chk mt-0.5" data-pct="'+(it.pct||0)+'" data-name="'+esc(it.en)+'" value="'+i+'">'
-      +'<span class="text-sm" style="color:var(--text-pri)">'+esc(pick(it))+' <span class="font-800" style="color:#3B6D11">−'+it.pct+'%</span></span></label>';
-  }).join('');
+      +'<input type="checkbox" class="sv-track-chk mt-0.5" data-pct="'+pct+'" data-name="'+esc(it.en)+'" value="'+i+'">'
+      +'<span class="text-sm" style="color:var(--text-pri)">'+esc(pick(it))+' <span class="font-800" style="color:#3B6D11">−'+pct+'%</span></span></label>';
+  }).join(''):'<p class="text-xs py-2" style="color:var(--text-muted-col)" data-i="svTrackNoRecs"></p>';
   var tracking=(state.sv.tracking||[]).slice().sort(function(a,b){return b.ts-a.ts;});
   var historyHtml=tracking.length?tracking.map(function(e){
     var save=e.beforeBill-e.afterBill;
@@ -2979,8 +2983,13 @@ function renderSvTracking(){
     +'<div class="flex items-center gap-2 mb-1"><i data-lucide="target" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-base" data-i="svTrackTitle"></h3></div>'
     +'<p class="text-navy-400 text-xs mb-4" data-i="svTrackSub"></p>'
     +'<div class="grid lg:grid-cols-2 gap-5">'
-    +'<div><p class="text-navy-600 text-xs font-700 mb-1" data-i="svTrackFollowed"></p>'
-    +'<div class="mb-3">'+checks+'</div>'
+    +'<div><p class="text-navy-600 text-xs font-700 mb-0.5" data-i="svTrackFollowed"></p>'
+    +'<p class="text-navy-300 text-[11px] font-600 mb-2 flex items-center gap-1"><i data-lucide="sparkles" class="icon-xs"></i><span data-i="svTrackAiHint"></span></p>'
+    +'<div id="svTrackChecklist" class="mb-2">'+checks+'</div>'
+    +'<div class="flex gap-2 mb-4">'
+    +'<input type="text" id="svCustomTip" data-i-ph="svCustomPh" onkeydown="if(event.key===\'Enter\'){event.preventDefault();svAddCustomTip();}" class="flex-1 border border-navy-200 rounded-xl px-3 py-2 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/>'
+    +'<button onclick="svAddCustomTip()" class="px-3 py-2 rounded-xl bg-navy-50 text-navy-500 border border-navy-200 hover:bg-navy-100 text-sm font-700 flex items-center gap-1 flex-shrink-0"><i data-lucide="plus" class="icon-xs"></i><span data-i="svCustomAdd"></span></button>'
+    +'</div>'
     +'<div class="grid grid-cols-2 gap-3">'
     +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1" data-i="svTrackBefore"></label><input type="number" id="svTrackBefore" value="'+Math.round(curBill)+'" class="w-full border border-navy-200 rounded-xl px-3 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
     +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1" data-i="svTrackAfter"></label><input type="number" id="svTrackAfter" placeholder="—" class="w-full border border-navy-200 rounded-xl px-3 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
@@ -2992,7 +3001,31 @@ function renderSvTracking(){
     +'</div>'
     +'</div></div>';
   document.querySelectorAll('#svTrackingPanel [data-i]').forEach(function(e){e.textContent=t(e.getAttribute('data-i'));});
+  document.querySelectorAll('#svTrackingPanel [data-i-ph]').forEach(function(e){e.placeholder=t(e.getAttribute('data-i-ph'));});
   lucide.createIcons({nodes:[el]});
+}
+function svAddCustomTip(){
+  var inp=document.getElementById('svCustomTip'); if(!inp) return;
+  var txt=(inp.value||'').trim(); if(!txt) return;
+  var cont=document.getElementById('svTrackChecklist'); if(!cont) return;
+  // If the placeholder "no recs" note is showing, clear it first
+  var note=cont.querySelector('[data-i="svTrackNoRecs"]'); if(note) cont.innerHTML='';
+  var lbl=document.createElement('label');
+  lbl.className='flex items-start gap-2 py-1.5 cursor-pointer';
+  var cb=document.createElement('input');
+  cb.type='checkbox'; cb.className='sv-track-chk mt-0.5'; cb.checked=true;
+  cb.setAttribute('data-pct','0'); cb.setAttribute('data-name',txt); cb.setAttribute('data-custom','1');
+  var span=document.createElement('span');
+  span.className='text-sm'; span.style.color='var(--text-pri)';
+  span.textContent=txt+' ';
+  var tag=document.createElement('span');
+  tag.className='text-[10px] font-800 px-1.5 py-0.5 rounded-full align-middle';
+  tag.style.background='var(--surface-3)'; tag.style.color='var(--text-sec)';
+  tag.textContent=state.lang==='th'?'เขียนเอง':'custom';
+  span.appendChild(tag);
+  lbl.appendChild(cb); lbl.appendChild(span);
+  cont.appendChild(lbl);
+  inp.value=''; inp.focus();
 }
 function svSaveTracking(){
   var afterEl=document.getElementById('svTrackAfter'), beforeEl=document.getElementById('svTrackBefore');
