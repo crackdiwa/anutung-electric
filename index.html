@@ -580,6 +580,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
             <span id="svSliderMinLbl"></span><span id="svSliderMaxLbl"></span>
           </div>
         </div>
+        <div id="svAppliancePanel" class="mb-6"></div>
         <div id="svMetrics" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
         <div class="grid lg:grid-cols-2 gap-6 mb-8">
           <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
@@ -603,6 +604,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
           </div>
           <div id="svAiResult" class="px-6 pb-6 hidden"></div>
         </div>
+        <div id="svTrackingPanel" class="mb-8"></div>
         <div class="bg-white rounded-2xl border border-navy-100 shadow-sm overflow-hidden">
           <div class="p-6 border-b border-navy-100">
             <h3 class="text-navy-950 font-800 text-base" data-i="svAIHeader"></h3>
@@ -699,6 +701,12 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-navy-950 text-white text-sm font-600 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 translate-y-24 opacity-0 pointer-events-none">
   <i data-lucide="check-circle" id="toastIcon" class="icon-sm text-emerald-400"></i>
   <span id="toastTxt"></span>
+</div>
+
+<!-- ═══ GUIDED TOUR OVERLAY ═══ -->
+<div id="tourOverlay" class="hidden">
+  <div class="tour-dim"></div>
+  <div id="tourCard" class="tour-card"></div>
 </div>
 
 <style>
@@ -874,6 +882,34 @@ input[type=range]::-webkit-slider-thumb{ width:26px;height:26px;border:3px solid
   .guest-banner-btn span{ display:none; }    /* icon-only on very small screens */
   .mtab span{ font-size:9.5px; }
 }
+
+/* ── Guided tour overlay ── */
+#tourOverlay{ position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; padding:20px; }
+#tourOverlay.hidden{ display:none; }
+.tour-dim{ position:absolute; inset:0; background:rgba(6,18,38,.62); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+.tour-card{ position:relative; z-index:1; width:100%; max-width:420px; background:var(--surface); border:1px solid var(--border-col); border-radius:24px; padding:30px 24px 22px; text-align:center; box-shadow:0 30px 70px -20px rgba(6,18,38,.7), inset 0 1px 0 rgba(255,255,255,.5); animation:popIn .42s cubic-bezier(.34,1.56,.64,1) both; }
+[data-theme="dark"] .tour-card{ box-shadow:0 30px 70px -20px rgba(0,0,0,.8); }
+.tour-x{ position:absolute; top:14px; right:14px; width:30px; height:30px; border:none; border-radius:9px; background:var(--surface-2); color:var(--text-muted-col); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.tour-x:hover{ background:var(--surface-3); }
+.tour-icon{ width:66px; height:66px; border-radius:20px; margin:0 auto 16px; background:linear-gradient(135deg,#0F4C81,#2D7DD2); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 26px -8px rgba(15,76,129,.6), inset 0 1px 0 rgba(255,255,255,.28); }
+.tour-step-label{ font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted-col); }
+.tour-title{ font-size:20px; font-weight:900; color:var(--text-pri); margin-top:4px; line-height:1.25; }
+.tour-body{ font-size:14px; line-height:1.65; color:var(--text-sec); margin-top:8px; }
+.tour-dots{ display:flex; gap:6px; justify-content:center; margin:18px 0; }
+.tour-dot{ width:7px; height:7px; border-radius:99px; background:var(--border-col); transition:all .3s cubic-bezier(.34,1.56,.64,1); }
+.tour-dot.active{ width:22px; background:linear-gradient(135deg,#0F4C81,#2D7DD2); }
+.tour-actions{ display:flex; gap:10px; }
+.tour-btn-ghost{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px; border:1.5px solid var(--border-col); background:transparent; color:var(--text-sec); font-weight:700; font-size:14px; padding:12px; border-radius:14px; cursor:pointer; font-family:inherit; transition:background .2s; }
+.tour-btn-ghost:hover{ background:var(--surface-2); }
+.tour-btn-primary{ flex:1.5; display:inline-flex; align-items:center; justify-content:center; gap:6px; border:none; background:linear-gradient(135deg,#0F4C81,#2D7DD2); color:#fff; font-weight:800; font-size:14px; padding:12px; border-radius:14px; cursor:pointer; font-family:inherit; box-shadow:var(--shadow-btn); transition:filter .2s, transform .12s; }
+.tour-btn-primary:hover{ filter:brightness(1.05); }
+.tour-btn-primary:active{ transform:translateY(1px); }
+
+/* ── Toggle switch (SmartVolt "use my appliances") ── */
+.seg-switch{ position:relative; width:46px; height:26px; border-radius:99px; border:none; background:var(--border-col); cursor:pointer; flex-shrink:0; transition:background .25s; padding:0; }
+.seg-switch.on{ background:linear-gradient(135deg,#0F4C81,#2D7DD2); }
+.seg-switch .seg-knob{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
+.seg-switch.on .seg-knob{ transform:translateX(20px); }
 </style>
 
 <script>
@@ -925,6 +961,25 @@ en:{
   brandName:'Anutung Electric', perMonth:'/month', perYear:'/year',
   guestBannerText:"You're in guest mode — your settings won't be saved when you leave. Sign in to keep them.",
   guestBannerCta:'Sign in to save',
+  tourStartBtn:'Show me how it works', tourSkip:'Skip', tourBack:'Back', tourNext:'Next', tourFinish:'Get started', tourStepOf:'Step {n} of {total}',
+  tour1Title:'Welcome to Anutung Electric', tour1Body:"In a few quick steps you'll see how to track your bill, simulate costs, and get an AI savings plan. Tap Next to begin.",
+  tour2Title:'Dashboard', tour2Body:'Your monthly bill, usage trend and bill-risk at a glance — it updates automatically as you add appliances.',
+  tour3Title:'Add your appliances', tour3Body:'Tap “Add Appliance” and enter what you use, its wattage and hours per day. The more you add, the more accurate everything becomes.',
+  tour4Title:'Bill Simulator', tour4Body:'Enter your units (kWh) to see the expected bill on real Thailand MEA/PEA progressive tariffs.',
+  tour5Title:'SmartVolt — your AI plan', tour5Body:'Pick a lifestyle profile, fill in your appliances, then tap “Analyze with AI” for a savings plan tailored to you.',
+  tour6Title:'Track results & sign in', tour6Body:'After trying the tips, log your new bill in SmartVolt so the AI can adjust its advice. Sign in (top-right) to save everything across devices.',
+  svApTitle:'Your appliances', svApSub:'Add what you use, hours per day and wattage — your plan is then built from real numbers.',
+  svApNameLbl:'Appliance', svApAdd:'Add', svApEmpty:'No appliances added yet — add a few to personalise your plan.',
+  svApUseToggle:'Use my appliances for the analysis', svApTotal:'Total from your appliances', svApAdded:'Appliance added!', svApSynced:'Now analysing your real appliance usage.',
+  svTrackTitle:'Track your results', svTrackSub:'Tried the advice? Log your new bill — the AI learns from it and adjusts your plan.',
+  svTrackFollowed:'What did you try?', svTrackBefore:'Bill before (฿)', svTrackAfter:'New bill after (฿)', svTrackSaveBtn:'Log this result',
+  svTrackHistory:'Your progress', svTrackEmpty:'No results logged yet. Try a tip, then record your new bill here to see if it worked.',
+  svTrackWorked:'Worked! Saved {amt} ({pct}%)', svTrackPartial:'Partly worked — saved {amt} ({pct}%)', svTrackNone:'No savings yet ({pct}%)',
+  svTrackExpected:'target was {pct}%', svTrackReanalyze:'Re-analyze with my results', svTrackErr:'Enter your new bill amount first.', svTrackSaved:'Result logged — nice work!',
+  svAdjTitle:'Adjusted from your real results', svAdjLogged:'Based on {n} logged result(s).',
+  svAdjUnder:'Your real savings ({actual}%) came in below the {expected}% target, so the plan is escalated with stronger, higher-impact measures.',
+  svAdjOn:"You're hitting your targets ({actual}% vs {expected}%) — time to level up to the next set of upgrades.",
+  svAdjPickTip:'Pick at least the tips you actually tried.',
   navDashboard:'Dashboard', navAppliances:'Appliances', navBillSim:'Bill Simulator', navSmartVolt:'SmartVolt', navCommunity:'Community',
   tabDashboard:'Dashboard', tabAppliances:'Devices', tabBillSim:'Simulator', tabSmartVolt:'SmartVolt', tabCommunity:'Community',
   navAnalyzer:'Bill Analyzer',
@@ -1038,6 +1093,25 @@ th:{
   brandName:'Anutung Electric', perMonth:'/เดือน', perYear:'/ปี',
   guestBannerText:'คุณกำลังใช้งานแบบผู้เยี่ยมชม — ค่าที่ตั้งไว้จะไม่ถูกบันทึกเมื่อออกจากเว็บ เข้าสู่ระบบเพื่อบันทึกไว้',
   guestBannerCta:'เข้าสู่ระบบเพื่อบันทึก',
+  tourStartBtn:'สอนวิธีใช้งาน', tourSkip:'ข้าม', tourBack:'ย้อนกลับ', tourNext:'ถัดไป', tourFinish:'เริ่มใช้งาน', tourStepOf:'ขั้นที่ {n} จาก {total}',
+  tour1Title:'ยินดีต้อนรับสู่ Anutung Electric', tour1Body:'ในไม่กี่ขั้นตอน คุณจะรู้วิธีติดตามค่าไฟ จำลองค่าใช้จ่าย และรับแผนประหยัดจาก AI กด “ถัดไป” เพื่อเริ่มได้เลย',
+  tour2Title:'แดชบอร์ด', tour2Body:'ดูค่าไฟรายเดือน แนวโน้มการใช้ และความเสี่ยงบิลแพงในที่เดียว — อัปเดตอัตโนมัติเมื่อคุณเพิ่มอุปกรณ์',
+  tour3Title:'เพิ่มเครื่องใช้ไฟฟ้า', tour3Body:'กด “เพิ่มอุปกรณ์” แล้วกรอกว่าใช้อะไร กินไฟกี่วัตต์ และใช้กี่ชั่วโมงต่อวัน ยิ่งใส่ครบ ผลวิเคราะห์ยิ่งแม่นยำ',
+  tour4Title:'จำลองค่าไฟ', tour4Body:'ใส่จำนวนหน่วย (kWh) เพื่อดูค่าไฟที่ควรเป็นตามอัตราก้าวหน้า MEA/PEA จริงของไทย',
+  tour5Title:'SmartVolt — แผนจาก AI', tour5Body:'เลือกโปรไฟล์ไลฟ์สไตล์ กรอกอุปกรณ์ของคุณ แล้วกด “วิเคราะห์ด้วย AI” เพื่อรับแผนประหยัดเฉพาะคุณ',
+  tour6Title:'ติดตามผล & เข้าสู่ระบบ', tour6Body:'หลังลองทำตามเคล็ดลับ บันทึกบิลใหม่ใน SmartVolt เพื่อให้ AI ปรับคำแนะนำ และเข้าสู่ระบบ (มุมขวาบน) เพื่อบันทึกข้อมูลทุกเครื่อง',
+  svApTitle:'อุปกรณ์ที่คุณใช้', svApSub:'กรอกว่าใช้อะไร กี่ชั่วโมงต่อวัน และกินไฟกี่วัตต์ — แผนจะถูกคำนวณจากข้อมูลจริงของคุณ',
+  svApNameLbl:'อุปกรณ์', svApAdd:'เพิ่ม', svApEmpty:'ยังไม่ได้เพิ่มอุปกรณ์ — เพิ่มสักหน่อยเพื่อให้แผนเฉพาะคุณ',
+  svApUseToggle:'ใช้ข้อมูลอุปกรณ์ของฉันในการวิเคราะห์', svApTotal:'รวมจากอุปกรณ์ของคุณ', svApAdded:'เพิ่มอุปกรณ์แล้ว!', svApSynced:'กำลังวิเคราะห์จากการใช้ไฟจริงของอุปกรณ์คุณ',
+  svTrackTitle:'ติดตามผลลัพธ์', svTrackSub:'ลองทำตามคำแนะนำแล้ว? บันทึกบิลใหม่ของคุณ — AI จะเรียนรู้และปรับแผนให้',
+  svTrackFollowed:'คุณลองทำอะไรบ้าง?', svTrackBefore:'บิลก่อนหน้า (฿)', svTrackAfter:'บิลใหม่หลังทำตาม (฿)', svTrackSaveBtn:'บันทึกผลนี้',
+  svTrackHistory:'ความคืบหน้าของคุณ', svTrackEmpty:'ยังไม่มีผลที่บันทึกไว้ ลองทำตามเคล็ดลับ แล้วบันทึกบิลใหม่ที่นี่เพื่อดูว่าได้ผลไหม',
+  svTrackWorked:'ได้ผล! ประหยัด {amt} ({pct}%)', svTrackPartial:'ได้ผลบางส่วน — ประหยัด {amt} ({pct}%)', svTrackNone:'ยังไม่ประหยัด ({pct}%)',
+  svTrackExpected:'เป้าหมาย {pct}%', svTrackReanalyze:'ให้ AI วิเคราะห์ใหม่จากผลจริง', svTrackErr:'กรอกยอดบิลใหม่ก่อน', svTrackSaved:'บันทึกผลแล้ว — เยี่ยมมาก!',
+  svAdjTitle:'ปรับจากผลจริงของคุณ', svAdjLogged:'อ้างอิงจากผลที่บันทึก {n} ครั้ง',
+  svAdjUnder:'ผลจริง ({actual}%) ต่ำกว่าเป้าหมาย {expected}% — แผนด้านล่างถูกปรับให้เข้มขึ้นด้วยมาตรการที่ได้ผลแรงกว่า',
+  svAdjOn:'คุณทำได้ตามเป้า ({actual}% เทียบ {expected}%) — ถึงเวลาขยับไปสู่การอัปเกรดขั้นถัดไป',
+  svAdjPickTip:'เลือกอย่างน้อยเคล็ดลับที่คุณได้ลองทำจริง',
   navDashboard:'แดชบอร์ด', navAppliances:'ติดตามเครื่องใช้ไฟฟ้า', navBillSim:'จำลองค่าไฟ', navSmartVolt:'SmartVolt', navCommunity:'ชุมชน',
   tabDashboard:'แดชบอร์ด', tabAppliances:'อุปกรณ์', tabBillSim:'จำลองบิล', tabSmartVolt:'SmartVolt', tabCommunity:'ชุมชน',
   navAnalyzer:'วิเคราะห์บิล',
@@ -1164,7 +1238,7 @@ var state = {
   lang:'th', currency:'THB', unit:'kWh', theme:'light',
   activeSec:'hero',
   appliances:[], nextApId:1,
-  profile:null, sv:{ usageKwh:300, activeTab:'quick' },
+  profile:null, sv:{ usageKwh:300, activeTab:'quick', tracking:[], useAppliances:false },
   lifestyle:{ occupation:'', householdSize:3, flags:{ acAllDay:false, gaming:false, waterHeater:false, nightOwl:false, multipleAC:false } },
   billSim:{ kwh:300 },
   billAnalyzer:{ kwh:'', amount:'', prev:'', monthIdx:null },
@@ -1419,7 +1493,8 @@ function openHelp(){
     +'<button onclick="closeModal()" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-navy-50" style="color:var(--text-muted-col)" aria-label="Close"><i data-lucide="x" class="icon-sm"></i></button></div>'
     +'<p class="text-xs mb-1" style="color:var(--text-muted-col)">Anutung Electric · '+(L?'ผู้ช่วยพลังงาน AI':'AI energy advisor')+'</p>'
     +rows
-    +'<button onclick="closeModal()" class="w-full mt-5 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 text-sm py-3 rounded-xl hover:shadow-md transition-all">'+(L?'เข้าใจแล้ว':'Got it')+'</button>'
+    +'<button onclick="closeModal();setTimeout(startTour,160);" class="w-full mt-5 flex items-center justify-center gap-2 border-2 font-800 text-sm py-3 rounded-xl transition-all" style="border-color:var(--border-col);color:var(--text-sec)"><i data-lucide="play-circle" class="icon-sm"></i>'+esc(t('tourStartBtn'))+'</button>'
+    +'<button onclick="closeModal()" class="w-full mt-3 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 text-sm py-3 rounded-xl hover:shadow-md transition-all">'+(L?'เข้าใจแล้ว':'Got it')+'</button>'
     +'</div>';
   openModal(html);
 }
@@ -1705,6 +1780,8 @@ function navigateTo(sec){
   window.scrollTo({top:0,behavior:'smooth'});
   if(typeof updateGuestBanner==='function') updateGuestBanner();
   if(typeof onSection==='function') onSection(sec);
+  // First time the visitor enters the app → auto-launch the guided tour
+  if(sec!=='hero' && typeof maybeAutoTour==='function') maybeAutoTour();
 }
 document.querySelectorAll('.nav-link').forEach(function(a){
   a.addEventListener('click',function(e){e.preventDefault();navigateTo(a.getAttribute('data-sec'));});
@@ -2262,6 +2339,7 @@ function resetSvProfile(){
 }
 function renderSvStrategy(){
   var p=PROFILES[state.profile]; if(!p) return;
+  svSyncUsageFromAppliances();
   document.querySelectorAll('#sec-smartvolt [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
   // Profile header
   var icon=document.getElementById('svProfileIcon');
@@ -2272,14 +2350,23 @@ function renderSvStrategy(){
   var sl=document.getElementById('svSlider');
   if(sl){
     sl.value=state.sv.usageKwh;
-    sl.oninput=function(){state.sv.usageKwh=parseInt(this.value);saveLS();updateSvMetrics();updateSvCharts();updateSvTabContent();if(state.sv.aiShown)svRenderAnalysis(false);};
+    sl.oninput=function(){
+      state.sv.usageKwh=parseInt(this.value);
+      state.sv.useAppliances=false; // manual override
+      var sw=document.querySelector('#svAppliancePanel .seg-switch');
+      if(sw){ sw.classList.remove('on'); sw.setAttribute('aria-pressed','false'); }
+      saveLS();updateSvMetrics();updateSvCharts();updateSvTabContent();renderSvTracking();
+      if(state.sv.aiShown)svRenderAnalysis(false);
+    };
   }
   var minL=document.getElementById('svSliderMinLbl'),maxL=document.getElementById('svSliderMaxLbl');
   if(minL) minL.textContent=energy(50)+t('perMonth');
   if(maxL) maxL.textContent=energy(1500)+t('perMonth');
+  renderSvAppliances();
   updateSvMetrics();
   updateSvCharts();
   renderSvTabs();
+  renderSvTracking();
   var aiBtn=document.getElementById('svAiBtn');
   if(aiBtn) aiBtn.onclick=function(){state.sv.aiShown=true;saveLS();svRenderAnalysis(true);};
   if(state.sv.aiShown){ svRenderAnalysis(false); }
@@ -2307,14 +2394,30 @@ function svAnalyze(){
   if(f.acAllDay) findings.push({ic:'wind',en:'Running AC all day is a major driver — scheduling it could cut 8–12%.',th:'เปิดแอร์ทั้งวันเป็นตัวกินไฟหลัก — ตั้งเวลาช่วยลดได้ 8–12%'});
   if(f.waterHeater) findings.push({ic:'flame',en:'Your water heater draws high power — limiting runtime saves noticeably.',th:'เครื่องทำน้ำอุ่นกินไฟสูง — จำกัดเวลาใช้ช่วยประหยัดได้ชัดเจน'});
   if(occ==='wfh') findings.push({ic:'home',en:'Working from home raises your daytime cooling load.',th:'ทำงานที่บ้านทำให้โหลดแอร์กลางวันสูงขึ้น'});
+  // ── Adjust the plan based on real tracked results ──
+  var adj=svComputeAdjustment();
+  if(adj){
+    if(adj.mode==='under') findings.unshift({ic:'alert-octagon',
+      en:'Real results: you saved '+adj.avgActual+'% vs a '+adj.avgExpected+'% target — escalating to stronger measures.',
+      th:'ผลจริง: คุณประหยัดได้ '+adj.avgActual+'% จากเป้า '+adj.avgExpected+'% — ปรับแผนให้เข้มขึ้น'});
+    else findings.unshift({ic:'badge-check',
+      en:'Real results: you saved '+adj.avgActual+'% (target '+adj.avgExpected+'%) — leveling up to the next set of upgrades.',
+      th:'ผลจริง: คุณประหยัดได้ '+adj.avgActual+'% (เป้า '+adj.avgExpected+'%) — ขยับขึ้นขั้นถัดไป'});
+  }
   findings=findings.slice(0,5);
-  var pool=[]; try{ pool=(getPathwayItems('quick')||[]).concat(getPathwayItems('smart')||[]); }catch(e){ pool=[]; }
+  // Recommendation pool: escalate when results underperform / level-up when on target
+  var pool=[];
+  try{
+    if(adj&&adj.mode==='under') pool=(getPathwayItems('smart')||[]).concat(getPathwayItems('longterm')||[]);
+    else if(adj&&(adj.mode==='over'||adj.mode==='mid')) pool=(getPathwayItems('longterm')||[]).concat(getPathwayItems('smart')||[]);
+    else pool=(getPathwayItems('quick')||[]).concat(getPathwayItems('smart')||[]);
+  }catch(e){ pool=[]; }
   if(!pool.length) pool=[{en:'Set AC to 26°C',th:'ตั้งแอร์ 26°C',pct:6},{en:'Switch to LED lighting',th:'เปลี่ยนเป็นไฟ LED',pct:4}];
   var seen={}, recs=pool.map(function(p){return {en:p.en,th:p.th,baht:bill*(p.pct/100)};})
     .sort(function(a,b){return b.baht-a.baht;})
     .filter(function(r){if(seen[r.en])return false;seen[r.en]=true;return true;}).slice(0,5);
   var totalSaveYear=recs.reduce(function(s,x){return s+x.baht;},0)*12;
-  return {level:level,kwh:kwh,bill:bill,findings:findings,recs:recs,totalSaveYear:totalSaveYear};
+  return {level:level,kwh:kwh,bill:bill,findings:findings,recs:recs,totalSaveYear:totalSaveYear,adjustment:adj};
 }
 function svRenderAnalysis(animate){
   var box=document.getElementById('svAiResult'); if(!box) return;
@@ -2335,8 +2438,20 @@ function svRenderAnalysis(animate){
   var recsHtml=a.recs.map(function(r,i){
     return '<div class="flex items-center gap-3 py-2 border-t" style="border-color:var(--border-light-col)"><span class="w-6 h-6 rounded-full bg-navy-500 text-white text-xs font-800 flex items-center justify-center flex-shrink-0">'+(i+1)+'</span><span class="text-sm flex-1" style="color:var(--text-pri)">'+esc(pick(r))+'</span><span class="font-800 text-sm flex-shrink-0" style="color:var(--text-sec)">'+money(r.baht)+'</span></div>';
   }).join('');
+  var adjHtml='';
+  if(a.adjustment){
+    var ad=a.adjustment;
+    var aMsg=ad.mode==='under'?tf('svAdjUnder',{actual:ad.avgActual,expected:ad.avgExpected}):tf('svAdjOn',{actual:ad.avgActual,expected:ad.avgExpected});
+    var aCol=ad.mode==='under'?'#BA7517':'#3B6D11';
+    var aBg=ad.mode==='under'?'rgba(239,159,39,.12)':'rgba(99,153,34,.12)';
+    adjHtml='<div class="rounded-xl p-3 mb-4 flex items-start gap-2" style="background:'+aBg+'"><i data-lucide="git-branch-plus" class="icon-sm flex-shrink-0" style="color:'+aCol+';margin-top:1px"></i>'
+      +'<div><p class="text-xs font-900" style="color:'+aCol+'">'+esc(t('svAdjTitle'))+'</p>'
+      +'<p class="text-xs mt-0.5" style="color:var(--text-pri)">'+esc(aMsg)+'</p>'
+      +'<p class="text-[11px] mt-1" style="color:var(--text-muted-col)">'+esc(tf('svAdjLogged',{n:ad.n}))+'</p></div></div>';
+  }
   box.innerHTML=
     '<div class="ba-verdict mb-5" style="background:'+lv.bg+'"><i data-lucide="'+lv.ic+'" class="icon-md flex-shrink-0" style="color:'+lv.col+';margin-top:1px"></i><p class="font-900 text-base leading-snug" style="color:'+lv.col+'">'+esc(tf(lv.key,{kwh:energy(a.kwh)}))+'</p></div>'
+    +adjHtml
     +'<p class="ba-eyebrow mb-1">'+esc(t('svAiFindings'))+'</p>'+findingsHtml
     +'<p class="ba-eyebrow mt-5 mb-1">'+esc(t('svAiRecs'))+'</p>'+recsHtml
     +'<div class="mt-4 p-4 rounded-xl flex items-center gap-3" style="background:var(--surface-2)"><i data-lucide="piggy-bank" class="icon-md flex-shrink-0" style="color:var(--text-sec)"></i><div><p class="text-xs font-600" style="color:var(--text-muted-col)">'+esc(t('svAiBottomLine'))+'</p><p class="font-900 text-lg" style="color:var(--text-sec)">'+esc(tf('svAiSaveYear',{amt:money(a.totalSaveYear)}))+'</p></div></div>';
@@ -2749,6 +2864,210 @@ function getEcobotReply(msg){
 // Ecobot send events
 document.getElementById('ecobotSend').addEventListener('click',sendEcobotMsg);
 document.getElementById('ecobotInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendEcobotMsg();}});
+
+// ══════════════════════════════════════════════════════
+// SMARTVOLT — APPLIANCE ENTRY (what you use / hours / watts)
+// ══════════════════════════════════════════════════════
+function svApplianceTotalKwh(){ return getApplianceResults().totalKwh; }
+function svSyncUsageFromAppliances(){
+  if(state.sv.useAppliances){
+    var tot=svApplianceTotalKwh();
+    if(tot>0) state.sv.usageKwh=Math.max(50,Math.round(tot));
+  }
+}
+function renderSvAppliances(){
+  var el=document.getElementById('svAppliancePanel'); if(!el) return;
+  var presetOpts=Object.keys(APPLIANCE_PRESETS).map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
+  var aps=state.appliances, total=svApplianceTotalKwh();
+  var dayTxt=state.lang==='th'?'ชม./วัน':'h/day';
+  var listHtml=aps.length?aps.map(function(a){
+    return '<div class="flex items-center gap-2 py-2 border-t" style="border-color:var(--border-light-col)">'
+      +'<button onclick="svToggleAppliance('+a.id+')" class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 '+(a.enabled?'bg-navy-500 text-white':'bg-navy-50 text-navy-300')+'"><i data-lucide="'+(a.enabled?'check':'minus')+'" class="icon-xs"></i></button>'
+      +'<div class="flex-1 min-w-0"><p class="text-sm font-700 truncate" style="color:var(--text-pri)">'+esc(a.name)+'</p>'
+      +'<p class="text-xs" style="color:var(--text-muted-col)">'+a.watts+'W · '+a.hours+' '+dayTxt+' · x'+a.qty+'</p></div>'
+      +'<span class="text-sm font-800 flex-shrink-0" style="color:var(--text-sec)">'+energy(appKwh(a))+'</span>'
+      +'<button onclick="svRemoveAppliance('+a.id+')" class="w-7 h-7 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 flex items-center justify-center flex-shrink-0"><i data-lucide="trash-2" class="icon-xs"></i></button>'
+      +'</div>';
+  }).join(''):'<p class="text-sm text-center py-4" style="color:var(--text-muted-col)" data-i="svApEmpty"></p>';
+  el.innerHTML='<div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">'
+    +'<div class="flex items-center gap-2 mb-1"><i data-lucide="plug-zap" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="svApTitle"></h3></div>'
+    +'<p class="text-navy-400 text-xs mb-4" data-i="svApSub"></p>'
+    +'<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">'
+    +'<div class="col-span-2 sm:col-span-1"><label class="block text-navy-600 text-[11px] font-700 mb-1" data-i="svApNameLbl"></label>'
+    +'<select id="svApName" onchange="svApPreset()" class="w-full border border-navy-200 rounded-xl px-2.5 py-2.5 text-navy-950 text-sm font-600 bg-navy-50 focus:border-navy-500 transition-colors">'+presetOpts+'</select></div>'
+    +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1">'+esc(t('apWatts'))+'</label><input type="number" id="svApWatts" min="1" max="20000" value="1200" class="w-full border border-navy-200 rounded-xl px-2.5 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
+    +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1">'+esc(t('apHours'))+'</label><input type="number" id="svApHours" min=".5" max="24" step=".5" value="4" class="w-full border border-navy-200 rounded-xl px-2.5 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
+    +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1">'+esc(t('apQty'))+'</label><input type="number" id="svApQty" min="1" max="50" value="1" class="w-full border border-navy-200 rounded-xl px-2.5 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
+    +'</div>'
+    +'<button onclick="svAddAppliance()" class="w-full mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm py-2.5 rounded-xl hover:shadow-md transition-all"><i data-lucide="plus" class="icon-sm"></i><span data-i="svApAdd"></span></button>'
+    +'<div class="mt-4">'+listHtml+'</div>'
+    +(aps.length?'<label class="flex items-center justify-between gap-2 mt-4 pt-4 border-t" style="border-color:var(--border-light-col)">'
+        +'<span class="flex items-center gap-2 text-sm font-700" style="color:var(--text-pri)"><i data-lucide="calculator" class="icon-sm text-navy-500"></i><span data-i="svApUseToggle"></span></span>'
+        +'<button onclick="svToggleUseAppliances()" class="seg-switch '+(state.sv.useAppliances?'on':'')+'" aria-pressed="'+(state.sv.useAppliances?'true':'false')+'"><span class="seg-knob"></span></button></label>'
+        +'<div class="mt-3 p-3 rounded-xl flex items-center justify-between" style="background:var(--surface-2)"><span class="text-xs font-700" style="color:var(--text-muted-col)" data-i="svApTotal"></span><span class="font-900 text-base" style="color:var(--text-sec)">'+energy(total)+t('perMonth')+'</span></div>':'')
+    +'</div>';
+  document.querySelectorAll('#svAppliancePanel [data-i]').forEach(function(e){e.textContent=t(e.getAttribute('data-i'));});
+  lucide.createIcons({nodes:[el]});
+}
+function svApPreset(){ var s=document.getElementById('svApName'); if(!s) return; var p=APPLIANCE_PRESETS[s.value]; if(p){ var w=document.getElementById('svApWatts'); if(w) w.value=p.watts; } }
+function svAddAppliance(){
+  var nameEl=document.getElementById('svApName'); if(!nameEl) return;
+  var name=nameEl.value;
+  var watts=Math.round(parseFloat(document.getElementById('svApWatts').value)||0);
+  var hours=parseFloat(document.getElementById('svApHours').value)||1;
+  var qty=Math.round(parseFloat(document.getElementById('svApQty').value)||1);
+  if(!name||watts<=0) return;
+  var cat=(APPLIANCE_PRESETS[name]||{}).cat||'appliances';
+  state.appliances.push({id:state.nextApId++,name:name,watts:watts,hours:hours,qty:qty,cat:cat,enabled:true});
+  state.sv.useAppliances=true;
+  svSyncUsageFromAppliances(); saveLS();
+  showToast(t('svApAdded'));
+  renderSvStrategy();
+}
+function svRemoveAppliance(id){
+  state.appliances=state.appliances.filter(function(x){return x.id!==id;});
+  svSyncUsageFromAppliances(); saveLS(); renderSvStrategy();
+  if(state.activeSec==='dashboard') renderDashboard();
+}
+function svToggleAppliance(id){
+  var a=state.appliances.find(function(x){return x.id===id;});
+  if(a){ a.enabled=!a.enabled; svSyncUsageFromAppliances(); saveLS(); renderSvStrategy(); }
+}
+function svToggleUseAppliances(){
+  state.sv.useAppliances=!state.sv.useAppliances;
+  if(state.sv.useAppliances){ svSyncUsageFromAppliances(); showToast(t('svApSynced')); }
+  saveLS(); renderSvStrategy();
+}
+
+// ══════════════════════════════════════════════════════
+// SMARTVOLT — RESULTS TRACKING + AI RE-THINK
+// ══════════════════════════════════════════════════════
+function svComputeAdjustment(){
+  var tr=state.sv.tracking||[]; if(!tr.length) return null;
+  var aA=0,aE=0; tr.forEach(function(e){ aA+=e.actualPct; aE+=e.expectedPct; });
+  aA/=tr.length; aE/=tr.length;
+  var ratio=aE>0?aA/aE:1;
+  var mode=(aA<=0||ratio<0.6)?'under':(ratio>=0.9?'over':'mid');
+  return { n:tr.length, avgActual:Math.round(aA*10)/10, avgExpected:Math.round(aE*10)/10, ratio:ratio, mode:mode };
+}
+function renderSvTracking(){
+  var el=document.getElementById('svTrackingPanel'); if(!el) return;
+  var k=state.sv.activeTab||'quick';
+  var items=getPathwayItems(k);
+  var curBill=calcTariff(state.sv.usageKwh).total;
+  var checks=items.map(function(it,i){
+    return '<label class="flex items-start gap-2 py-1.5 cursor-pointer">'
+      +'<input type="checkbox" class="sv-track-chk mt-0.5" data-pct="'+(it.pct||0)+'" data-name="'+esc(it.en)+'" value="'+i+'">'
+      +'<span class="text-sm" style="color:var(--text-pri)">'+esc(pick(it))+' <span class="font-800" style="color:#3B6D11">−'+it.pct+'%</span></span></label>';
+  }).join('');
+  var tracking=(state.sv.tracking||[]).slice().sort(function(a,b){return b.ts-a.ts;});
+  var historyHtml=tracking.length?tracking.map(function(e){
+    var save=e.beforeBill-e.afterBill;
+    var verdict,vcol,vbg,vic;
+    if(e.actualPct>=Math.max(1,e.expectedPct*0.8)){ verdict=tf('svTrackWorked',{amt:money(save),pct:e.actualPct}); vcol='#3B6D11'; vbg='rgba(99,153,34,.12)'; vic='check-circle'; }
+    else if(e.actualPct>0){ verdict=tf('svTrackPartial',{amt:money(save),pct:e.actualPct}); vcol='#BA7517'; vbg='rgba(239,159,39,.12)'; vic='alert-circle'; }
+    else { verdict=tf('svTrackNone',{pct:e.actualPct}); vcol='#E24B4A'; vbg='rgba(226,75,74,.12)'; vic='x-circle'; }
+    return '<div class="rounded-xl p-3 mb-2" style="background:'+vbg+'">'
+      +'<div class="flex items-start gap-2"><i data-lucide="'+vic+'" class="icon-sm flex-shrink-0" style="color:'+vcol+';margin-top:1px"></i>'
+      +'<div class="flex-1 min-w-0"><p class="text-sm font-900" style="color:'+vcol+'">'+esc(verdict)+'</p>'
+      +'<p class="text-xs mt-0.5" style="color:var(--text-sec)">'+money(e.beforeBill)+' → '+money(e.afterBill)+' · '+esc(tf('svTrackExpected',{pct:e.expectedPct}))+'</p>'
+      +'<p class="text-[11px] mt-0.5" style="color:var(--text-muted-col)">'+esc(timeAgo(e.ts))+(e.items&&e.items.length?' · '+e.items.length+(state.lang==='th'?' รายการ':' tip(s)'):'')+'</p></div>'
+      +'<button onclick="svRemoveTracking('+e.ts+')" class="w-6 h-6 rounded-lg text-navy-300 hover:text-red-500 flex items-center justify-center flex-shrink-0"><i data-lucide="x" class="icon-xs"></i></button>'
+      +'</div></div>';
+  }).join(''):'<p class="text-sm text-center py-4" style="color:var(--text-muted-col)" data-i="svTrackEmpty"></p>';
+  el.innerHTML='<div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">'
+    +'<div class="flex items-center gap-2 mb-1"><i data-lucide="target" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-base" data-i="svTrackTitle"></h3></div>'
+    +'<p class="text-navy-400 text-xs mb-4" data-i="svTrackSub"></p>'
+    +'<div class="grid lg:grid-cols-2 gap-5">'
+    +'<div><p class="text-navy-600 text-xs font-700 mb-1" data-i="svTrackFollowed"></p>'
+    +'<div class="mb-3">'+checks+'</div>'
+    +'<div class="grid grid-cols-2 gap-3">'
+    +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1" data-i="svTrackBefore"></label><input type="number" id="svTrackBefore" value="'+Math.round(curBill)+'" class="w-full border border-navy-200 rounded-xl px-3 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
+    +'<div><label class="block text-navy-600 text-[11px] font-700 mb-1" data-i="svTrackAfter"></label><input type="number" id="svTrackAfter" placeholder="—" class="w-full border border-navy-200 rounded-xl px-3 py-2.5 text-navy-950 font-700 text-sm bg-navy-50 focus:border-navy-500 transition-colors"/></div>'
+    +'</div>'
+    +'<button onclick="svSaveTracking()" class="w-full mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm py-2.5 rounded-xl hover:shadow-md transition-all"><i data-lucide="save" class="icon-sm"></i><span data-i="svTrackSaveBtn"></span></button>'
+    +'</div>'
+    +'<div><p class="text-navy-600 text-xs font-700 mb-2" data-i="svTrackHistory"></p>'+historyHtml
+    +(tracking.length?'<button onclick="svReanalyze()" class="w-full mt-2 flex items-center justify-center gap-2 border-2 font-700 text-sm py-2.5 rounded-xl transition-all" style="border-color:var(--border-col);color:var(--text-sec)"><i data-lucide="wand-2" class="icon-sm"></i><span data-i="svTrackReanalyze"></span></button>':'')
+    +'</div>'
+    +'</div></div>';
+  document.querySelectorAll('#svTrackingPanel [data-i]').forEach(function(e){e.textContent=t(e.getAttribute('data-i'));});
+  lucide.createIcons({nodes:[el]});
+}
+function svSaveTracking(){
+  var afterEl=document.getElementById('svTrackAfter'), beforeEl=document.getElementById('svTrackBefore');
+  var after=parseFloat(afterEl?afterEl.value:''), before=parseFloat(beforeEl?beforeEl.value:'')||calcTariff(state.sv.usageKwh).total;
+  if(!(after>0)){ showToast(t('svTrackErr'),'error'); if(afterEl) afterEl.focus(); return; }
+  var checks=[].slice.call(document.querySelectorAll('.sv-track-chk:checked'));
+  var expectedPct=Math.min(60,checks.reduce(function(s,c){return s+(parseFloat(c.getAttribute('data-pct'))||0);},0));
+  var items=checks.map(function(c){return c.getAttribute('data-name');});
+  var actualPct=before>0?Math.round((before-after)/before*1000)/10:0;
+  state.sv.tracking=state.sv.tracking||[];
+  state.sv.tracking.push({ts:Date.now(),beforeBill:before,afterBill:after,expectedPct:Math.round(expectedPct*10)/10,actualPct:actualPct,items:items});
+  state.sv.aiShown=true; saveLS();
+  showToast(t('svTrackSaved'));
+  renderSvStrategy();
+  svRenderAnalysis(true);
+}
+function svRemoveTracking(ts){
+  state.sv.tracking=(state.sv.tracking||[]).filter(function(e){return e.ts!==ts;});
+  saveLS(); renderSvStrategy();
+  if(state.sv.aiShown) svRenderAnalysis(false);
+}
+function svReanalyze(){
+  state.sv.aiShown=true; saveLS();
+  svRenderAnalysis(true);
+  var box=document.getElementById('svAiResult'); if(box) box.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ══════════════════════════════════════════════════════
+// GUIDED ONBOARDING TOUR (next / back / progress)
+// ══════════════════════════════════════════════════════
+var TOUR=[
+  {ic:'sparkles',  sec:null,        tk:'tour1Title', bk:'tour1Body'},
+  {ic:'gauge',     sec:'dashboard', tk:'tour2Title', bk:'tour2Body'},
+  {ic:'plug',      sec:'appliances',tk:'tour3Title', bk:'tour3Body'},
+  {ic:'calculator',sec:'billsim',   tk:'tour4Title', bk:'tour4Body'},
+  {ic:'brain',     sec:'smartvolt', tk:'tour5Title', bk:'tour5Body'},
+  {ic:'badge-check',sec:null,       tk:'tour6Title', bk:'tour6Body'}
+];
+var _tourIdx=0, _tourActive=false;
+function tourSeen(){ try{ return sessionStorage.getItem('ae3-tour-seen')==='1'; }catch(e){ return false; } }
+function markTourSeen(){ try{ sessionStorage.setItem('ae3-tour-seen','1'); }catch(e){} }
+function startTour(){
+  _tourActive=true; markTourSeen();
+  var ov=document.getElementById('tourOverlay'); if(!ov) return;
+  ov.classList.remove('hidden'); document.body.style.overflow='hidden';
+  _tourIdx=0; renderTourStep();
+}
+function endTour(){
+  _tourActive=false;
+  var ov=document.getElementById('tourOverlay'); if(ov) ov.classList.add('hidden');
+  document.body.style.overflow='';
+}
+function tourNext(){ if(_tourIdx>=TOUR.length-1){ endTour(); return; } _tourIdx++; renderTourStep(); }
+function tourBack(){ if(_tourIdx>0){ _tourIdx--; renderTourStep(); } }
+function renderTourStep(){
+  var s=TOUR[_tourIdx]; if(s.sec) navigateTo(s.sec);
+  var card=document.getElementById('tourCard'); if(!card) return;
+  var dots=TOUR.map(function(_,i){ return '<span class="tour-dot'+(i===_tourIdx?' active':'')+'"></span>'; }).join('');
+  var isLast=_tourIdx===TOUR.length-1, isFirst=_tourIdx===0;
+  card.innerHTML=
+    '<button class="tour-x" onclick="endTour()" aria-label="Close"><i data-lucide="x" class="icon-sm"></i></button>'
+    +'<div class="tour-icon"><i data-lucide="'+s.ic+'" class="icon-lg"></i></div>'
+    +'<p class="tour-step-label">'+esc(tf('tourStepOf',{n:_tourIdx+1,total:TOUR.length}))+'</p>'
+    +'<h3 class="tour-title">'+esc(t(s.tk))+'</h3>'
+    +'<p class="tour-body">'+esc(t(s.bk))+'</p>'
+    +'<div class="tour-dots">'+dots+'</div>'
+    +'<div class="tour-actions">'
+    +(isFirst
+        ?'<button class="tour-btn-ghost" onclick="endTour()">'+esc(t('tourSkip'))+'</button>'
+        :'<button class="tour-btn-ghost" onclick="tourBack()"><i data-lucide="arrow-left" class="icon-xs"></i>'+esc(t('tourBack'))+'</button>')
+    +'<button class="tour-btn-primary" onclick="tourNext()">'+esc(isLast?t('tourFinish'):t('tourNext'))+(isLast?'':' <i data-lucide="arrow-right" class="icon-xs"></i>')+'</button>'
+    +'</div>';
+  lucide.createIcons({nodes:[card]});
+}
+function maybeAutoTour(){ if(!tourSeen() && !_tourActive) startTour(); }
 
 // ── INIT ────────────────────────────────────────────────
 function seedCommunityIfEmpty(){
