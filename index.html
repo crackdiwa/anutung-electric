@@ -912,8 +912,8 @@ input[type=range]::-webkit-slider-thumb{ width:26px;height:26px;border:3px solid
   .text-5xl{ font-size:2.35rem !important; }
   /* Primary CTAs span comfortably & are easy to press */
   #heroStartBtn, #heroSimBtn{ flex:1 1 100%; justify-content:center; padding-top:15px; padding-bottom:15px; }
-  /* Cards: a bit tighter padding to maximise content width */
-  main .bg-white.rounded-2xl{ padding:18px !important; }
+  /* Cards: comfortable padding (overflow-hidden cards keep their own inner padding) */
+  main .bg-white.rounded-2xl:not(.overflow-hidden){ padding:20px 18px !important; }
   /* Bottom tab bar: bigger, clearer, full thumb targets */
   .mtab{ padding:9px 2px 8px; min-height:58px; }
   .mtab .icon-md{ width:23px; height:23px; }
@@ -974,6 +974,46 @@ input[type=range]::-webkit-slider-thumb{ width:26px;height:26px;border:3px solid
 .hi-del:hover{ background:rgba(226,75,74,.12); color:#E24B4A; }
 [data-theme="dark"] .hi-row{ background:var(--surface-2); border-color:var(--border-col); }
 @media(max-width:380px){ .mtab span{ font-size:9px; } .mtab{ padding-left:1px; padding-right:1px; } }
+
+/* ════════════════════════════════════════════════════════════
+   COMFORT LAYER — โปร่ง ไม่แออัด สบายตา
+   Softer shadows, lighter borders, roomier cards, calmer rhythm.
+   Uses an 8px spacing rhythm on top of the existing layout.
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --shadow-card: 0 1px 2px rgba(10,37,64,.04), 0 10px 28px -16px rgba(10,37,64,.12);
+  --shadow-card-hover: 0 2px 4px rgba(10,37,64,.05), 0 16px 36px -18px rgba(15,76,129,.20);
+  --shadow-btn: 0 1px 1px rgba(255,255,255,.35) inset, 0 2px 5px rgba(15,76,129,.20), 0 8px 18px -8px rgba(15,76,129,.32);
+}
+/* Lighter card borders = calmer surfaces */
+main .bg-white.rounded-2xl, main .bg-white.rounded-3xl, .stat-card, .land-feat{ border-color:#DDEBFF; }
+[data-theme="dark"] main .bg-white.rounded-2xl, [data-theme="dark"] main .bg-white.rounded-3xl,
+[data-theme="dark"] .stat-card, [data-theme="dark"] .land-feat{ border-color:var(--border-col); }
+/* Inputs: roomier, easier to read and hit */
+.ba-input{ padding:12px 14px; font-size:15px; }
+.ba-field-lbl{ font-size:12.5px; margin-bottom:6px; }
+/* ── Desktop: let everything breathe ── */
+@media(min-width:1024px){
+  #appMain{ padding-top:2.5rem; }
+  main .bg-white.rounded-2xl:not(.overflow-hidden),
+  main .bg-white.rounded-3xl:not(.overflow-hidden){ padding:28px; }
+  .stat-card{ padding:22px 24px; }
+  main .gap-6{ gap:1.75rem; }
+  main .gap-5{ gap:1.5rem; }
+  main .gap-4{ gap:1.25rem; }
+  main .mb-8{ margin-bottom:2.5rem; }
+  main .mb-6{ margin-bottom:1.75rem; }
+  main .space-y-6 > * + *{ margin-top:1.75rem; }
+}
+/* ── Narrow desktop (1024–1279px): stop the navbar from crowding ── */
+@media(min-width:1024px) and (max-width:1279px){
+  .nav-link{ padding-left:9px; padding-right:9px; font-size:12px; }
+  #segUnit{ display:none !important; }
+}
+/* ── Small phones: drop the redundant top-bar CTA (hero has its own) ── */
+@media(max-width:639px){
+  #enterAppBtn{ display:none !important; }
+}
 </style>
 
 <script>
