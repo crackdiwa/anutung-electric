@@ -13,12 +13,14 @@ A complete, single-file web app — no build, no server, no installation. Just o
 | Feature | Details |
 |---|---|
 | **Landing page** | Hero with 3D scene, stats, feature grid, how-it-works |
-| **Dashboard** | Metric cards + trend / risk / breakdown charts (Chart.js) |
-| **Bill Analyzer** | Upload a bill photo/PDF + enter the numbers → smart diagnosis of why it's high, likely causes, comparison chart, and savings actions |
+| **Home (Dashboard)** | Metric cards + trend / risk / breakdown charts (Chart.js) — the trend chart uses your **real recorded bills** once you have 2+ months in the Bill Diary |
+| **Bill Diary (สมุดค่าไฟ)** | Record each month's real bill (units + amount + note) → stats, month-by-month chart, and full history list. Synced to the cloud when signed in |
+| **Check My Bill** | Upload a bill photo/PDF + enter the numbers → smart diagnosis of why it's high, likely causes, comparison chart, savings actions, and one-tap save to the Bill Diary |
 | **Appliance Manager** | Add / edit / remove appliances with live kWh + cost preview |
-| **Bill Simulator** | Simulate your bill against real MEA/PEA tiered tariffs, Ft, service fee, VAT |
-| **SmartVolt** | Lifestyle questionnaire + profiles + **one-click AI deep analysis** (no chatbot needed) with prioritized, baht-quantified recommendations |
-| **Ecobot** | Built-in energy advisor chat |
+| **Cost Calculator** | Simulate your bill against real MEA/PEA tiered tariffs, Ft, service fee, VAT |
+| **Savings Coach (SmartVolt)** | Lifestyle questionnaire + profiles + **one-click AI deep analysis** (no chatbot needed) with prioritized, baht-quantified recommendations |
+| **Ecobot** | Energy advisor chat that answers from **your own data** — bill diary trend, biggest appliance, latest recorded bill |
+| **Per-page help** | ⓘ button next to every page title opens step-by-step instructions in plain language; global ? help + guided tour |
 | **Community** | Anonymous tips feed |
 | **Bilingual** | Full English / Thai (ไทย) with Plus Jakarta Sans + Kanit fonts |
 | **Dark mode** | Full theme toggle, persisted |

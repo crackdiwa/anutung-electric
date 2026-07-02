@@ -181,6 +181,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
     <!-- Nav links — hidden on mobile, shown after entering app -->
     <nav id="mainNav" class="hidden lg:flex items-center gap-1 flex-1 justify-center" aria-label="Main navigation">
       <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="dashboard" data-i="navDashboard">Dashboard</a>
+      <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="history" data-i="navHistory">Bill Diary</a>
       <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="billanalyzer" data-i="navAnalyzer">Bill Analyzer</a>
       <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="appliances" data-i="navAppliances">Appliances</a>
       <a href="#" class="nav-link px-3.5 py-2 rounded-lg text-[13px] font-600 text-navy-500 hover:bg-navy-50 transition-all duration-200" data-sec="billsim" data-i="navBillSim">Bill Simulator</a>
@@ -334,10 +335,10 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
         <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="featComm">Community Tips</h3>
         <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatCommDesc">Share and discover real money-saving tricks — anonymous, no account needed.</p>
       </div>
-      <div class="land-feat" data-nav-sec="dashboard">
-        <div class="land-feat-icon"><i data-lucide="line-chart" class="icon-md"></i></div>
-        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="landFeatForecast">Bill Forecast</h3>
-        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatForecastDesc">Predict next month's bill ahead of time so you can plan your budget with confidence.</p>
+      <div class="land-feat" data-nav-sec="history">
+        <div class="land-feat-icon"><i data-lucide="book-open" class="icon-md"></i></div>
+        <h3 class="text-navy-950 font-800 text-lg mt-4" data-i="landFeatForecast">Bill Diary</h3>
+        <p class="text-navy-500 text-sm mt-2 leading-relaxed" data-i="landFeatForecastDesc">Record each month's real bill and watch your savings progress on a clear chart.</p>
       </div>
     </div>
 
@@ -382,7 +383,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
   <section id="sec-dashboard" class="section hidden">
     <div class="animate-fade-up">
       <div class="flex items-start justify-between mb-8 flex-wrap gap-3">
-        <div><h1 class="text-3xl font-900 text-navy-950 mb-1" id="dashWelcomeTxt"></h1><p class="text-navy-400 text-sm" data-i="dashSub"></p></div>
+        <div><div class="flex items-center gap-2.5"><h1 class="text-3xl font-900 text-navy-950 mb-1" id="dashWelcomeTxt"></h1><button class="info-btn" onclick="openPageInfo('dashboard')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button></div><p class="text-navy-400 text-sm" data-i="dashSub"></p></div>
         <button onclick="navigateTo('smartvolt')" class="flex items-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white text-sm font-700 px-5 py-2.5 rounded-xl shadow hover:shadow-md hover:scale-105 transition-all duration-200">
           <i data-lucide="brain" class="icon-sm"></i><span data-i="navSmartVolt">SmartVolt</span>
         </button>
@@ -426,11 +427,60 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
     </div>
   </section>
 
+  <!-- BILL DIARY SECTION (สมุดค่าไฟ — real monthly records) -->
+  <section id="sec-history" class="section hidden">
+    <div class="animate-fade-up">
+      <div class="mb-8">
+        <div class="flex items-center gap-2.5">
+          <h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="hiTitle"></h1>
+          <button class="info-btn" onclick="openPageInfo('history')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button>
+        </div>
+        <p class="text-navy-400 text-sm" data-i="hiSub"></p>
+      </div>
+      <div class="grid lg:grid-cols-3 gap-6 items-start">
+        <!-- LEFT: add-record form -->
+        <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+          <h3 class="text-navy-950 font-800 text-base mb-5 flex items-center gap-2"><i data-lucide="pencil-line" class="icon-sm text-navy-500"></i><span data-i="hiFormTitle"></span></h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="ba-field-lbl" data-i="hiMonthLbl"></label><select id="hiMonth" class="ba-input"></select></div>
+            <div><label class="ba-field-lbl" data-i="hiYearLbl"></label><select id="hiYear" class="ba-input"></select></div>
+          </div>
+          <div class="mt-4"><label class="ba-field-lbl" data-i="hiAmountLbl"></label><input type="number" id="hiAmount" class="ba-input" placeholder="2,292"/></div>
+          <div class="mt-4"><label class="ba-field-lbl" data-i="hiKwhLbl"></label><input type="number" id="hiKwh" class="ba-input" placeholder="420"/></div>
+          <div class="mt-4"><label class="ba-field-lbl" data-i="hiNoteLbl"></label><input type="text" id="hiNote" class="ba-input" data-i-ph="hiNotePh"/></div>
+          <button onclick="saveHistoryRecord()" class="w-full mt-5 flex items-center justify-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+            <i data-lucide="save" class="icon-sm"></i><span data-i="hiSaveBtn"></span>
+          </button>
+          <p id="hiError" class="hidden text-red-500 text-xs font-700 mt-2 text-center"></p>
+        </div>
+        <!-- RIGHT: stats + chart + records -->
+        <div class="lg:col-span-2">
+          <div id="hiContent" class="space-y-6">
+            <div id="hiStats" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+              <div class="flex items-center gap-2 mb-5"><i data-lucide="bar-chart-3" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="hiChartTitle"></h3></div>
+              <div style="position:relative;height:230px"><canvas id="historyChart"></canvas></div>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
+              <div class="flex items-center gap-2 mb-4"><i data-lucide="list" class="icon-sm text-navy-500"></i><h3 class="text-navy-950 font-800 text-sm" data-i="hiListTitle"></h3></div>
+              <div id="hiList" class="space-y-2.5"></div>
+            </div>
+          </div>
+          <div id="hiEmpty" class="hidden text-center py-20 bg-white rounded-2xl border border-navy-100 shadow-sm">
+            <div class="w-20 h-20 rounded-3xl bg-navy-50 flex items-center justify-center mx-auto mb-4"><i data-lucide="book-open" class="icon-lg text-navy-300"></i></div>
+            <p class="text-navy-950 font-800 text-lg mb-1" data-i="hiEmptyTitle"></p>
+            <p class="text-navy-400 text-sm max-w-xs mx-auto" data-i="hiEmptyDesc"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- BILL ANALYZER SECTION -->
   <section id="sec-billanalyzer" class="section hidden">
     <div class="animate-fade-up">
       <div class="mb-8">
-        <h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="baTitle"></h1>
+        <div class="flex items-center gap-2.5"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="baTitle"></h1><button class="info-btn" onclick="openPageInfo('billanalyzer')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button></div>
         <p class="text-navy-400 text-sm" data-i="baSub"></p>
       </div>
       <div class="grid lg:grid-cols-2 gap-6">
@@ -477,7 +527,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
   <section id="sec-appliances" class="section hidden">
     <div class="animate-fade-up">
       <div class="flex items-start justify-between mb-8 flex-wrap gap-3">
-        <div><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="apTitle"></h1><p class="text-navy-400 text-sm" data-i="apSub"></p></div>
+        <div><div class="flex items-center gap-2.5"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="apTitle"></h1><button class="info-btn" onclick="openPageInfo('appliances')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button></div><p class="text-navy-400 text-sm" data-i="apSub"></p></div>
         <button onclick="openApModal(null)" class="flex items-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white text-sm font-700 px-5 py-2.5 rounded-xl shadow hover:shadow-md hover:scale-105 transition-all duration-200">
           <i data-lucide="plus" class="icon-sm"></i><span data-i="apAddBtn">Add Appliance</span>
         </button>
@@ -502,7 +552,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
   <!-- BILL SIMULATOR SECTION -->
   <section id="sec-billsim" class="section hidden">
     <div class="animate-fade-up">
-      <div class="mb-8"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="bsTitle"></h1><p class="text-navy-400 text-sm" data-i="bsSub"></p></div>
+      <div class="mb-8"><div class="flex items-center gap-2.5"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="bsTitle"></h1><button class="info-btn" onclick="openPageInfo('billsim')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button></div><p class="text-navy-400 text-sm" data-i="bsSub"></p></div>
       <div class="grid lg:grid-cols-2 gap-8">
         <div class="space-y-6">
           <div class="bg-white rounded-2xl p-6 border border-navy-100 shadow-sm">
@@ -549,7 +599,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
   <!-- SMARTVOLT SECTION -->
   <section id="sec-smartvolt" class="section hidden">
     <div class="animate-fade-up">
-      <div class="mb-8"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="svTitle"></h1><p class="text-navy-400 text-sm" data-i="svSub"></p></div>
+      <div class="mb-8"><div class="flex items-center gap-2.5"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="svTitle"></h1><button class="info-btn" onclick="openPageInfo('smartvolt')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button></div><p class="text-navy-400 text-sm" data-i="svSub"></p></div>
       <div id="svLifestyle" class="mb-6"></div>
       <div id="svChooser">
         <div class="max-w-2xl mx-auto text-center mb-8">
@@ -621,7 +671,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
   <!-- COMMUNITY SECTION -->
   <section id="sec-community" class="section hidden">
     <div class="animate-fade-up">
-      <div class="mb-8"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="commTitle"></h1><p class="text-navy-400 text-sm" data-i="commSub"></p></div>
+      <div class="mb-8"><div class="flex items-center gap-2.5"><h1 class="text-3xl font-900 text-navy-950 mb-1" data-i="commTitle"></h1><button class="info-btn" onclick="openPageInfo('community')" aria-label="How to use this page"><i data-lucide="info" class="icon-sm"></i></button></div><p class="text-navy-400 text-sm" data-i="commSub"></p></div>
       <div class="grid lg:grid-cols-3 gap-8">
         <div class="space-y-5">
           <div class="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
@@ -650,6 +700,7 @@ body,header,#modalBox,#toast,.stat-card{transition:background-color 0.3s ease,co
 <!-- Mobile bottom tab bar (in-app, phones only) -->
 <nav id="mobileTabBar" class="lg:hidden hidden fixed bottom-0 left-0 right-0 z-40 mtab-bar flex items-stretch px-1.5 pt-1" aria-label="Mobile navigation">
   <button class="mtab" data-sec="dashboard"><i data-lucide="gauge" class="icon-md"></i><span data-i="tabDashboard">Dashboard</span></button>
+  <button class="mtab" data-sec="history"><i data-lucide="book-open" class="icon-md"></i><span data-i="tabHistory">Diary</span></button>
   <button class="mtab" data-sec="appliances"><i data-lucide="plug" class="icon-md"></i><span data-i="tabAppliances">Devices</span></button>
   <button class="mtab" data-sec="billsim"><i data-lucide="calculator" class="icon-md"></i><span data-i="tabBillSim">Simulator</span></button>
   <button class="mtab" data-sec="smartvolt"><i data-lucide="brain" class="icon-md"></i><span data-i="tabSmartVolt">SmartVolt</span></button>
@@ -910,6 +961,19 @@ input[type=range]::-webkit-slider-thumb{ width:26px;height:26px;border:3px solid
 .seg-switch.on{ background:linear-gradient(135deg,#0F4C81,#2D7DD2); }
 .seg-switch .seg-knob{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
 .seg-switch.on .seg-knob{ transform:translateX(20px); }
+
+/* ── Per-page info (how-to-use) button ── */
+.info-btn{ width:32px; height:32px; border-radius:11px; border:1.5px solid var(--border-col); background:var(--surface); color:#2D7DD2; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; margin-top:-4px; box-shadow:var(--ring-soft), var(--emboss-top); transition:transform .2s cubic-bezier(.34,1.56,.64,1), background .2s; }
+.info-btn:hover{ background:var(--surface-3); transform:scale(1.1); }
+.info-btn:active{ transform:scale(.95); }
+
+/* ── Bill diary record rows ── */
+.hi-row{ display:flex; align-items:center; gap:12px; padding:12px 14px; border:1.5px solid var(--border-light-col); border-radius:14px; background:var(--surface-2); }
+.hi-row-ic{ width:38px; height:38px; border-radius:12px; background:var(--surface-3); color:#2D7DD2; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hi-del{ margin-left:auto; width:32px; height:32px; border:none; border-radius:10px; background:transparent; color:var(--text-muted-col); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .2s, color .2s; }
+.hi-del:hover{ background:rgba(226,75,74,.12); color:#E24B4A; }
+[data-theme="dark"] .hi-row{ background:var(--surface-2); border-color:var(--border-col); }
+@media(max-width:380px){ .mtab span{ font-size:9px; } .mtab{ padding-left:1px; padding-right:1px; } }
 </style>
 
 <script>
@@ -981,9 +1045,23 @@ en:{
   svAdjUnder:'Your real savings ({actual}%) came in below the {expected}% target, so the plan is escalated with stronger, higher-impact measures.',
   svAdjOn:"You're hitting your targets ({actual}% vs {expected}%) — time to level up to the next set of upgrades.",
   svAdjPickTip:'Pick at least the tips you actually tried.',
-  navDashboard:'Dashboard', navAppliances:'Appliances', navBillSim:'Bill Simulator', navSmartVolt:'SmartVolt', navCommunity:'Community',
-  tabDashboard:'Dashboard', tabAppliances:'Devices', tabBillSim:'Simulator', tabSmartVolt:'SmartVolt', tabCommunity:'Community',
-  navAnalyzer:'Bill Analyzer',
+  navDashboard:'Home', navAppliances:'My Appliances', navBillSim:'Cost Calculator', navSmartVolt:'Savings Coach', navCommunity:'Tips & Tricks',
+  tabDashboard:'Home', tabAppliances:'Appliances', tabBillSim:'Calculator', tabSmartVolt:'Coach', tabCommunity:'Tips',
+  navAnalyzer:'Check My Bill',
+  navHistory:'Bill Diary', tabHistory:'Diary',
+  hiTitle:'Bill Diary', hiSub:'Write down each month\'s real electricity bill — and see clearly whether your home is using more or less',
+  hiFormTitle:'Add a bill',
+  hiMonthLbl:'Month', hiYearLbl:'Year', hiKwhLbl:'Units used (from the bill, optional)', hiAmountLbl:'Amount paid (฿)',
+  hiNoteLbl:'Note (optional)', hiNotePh:'e.g. very hot month, guests stayed over…',
+  hiSaveBtn:'Save to diary', hiSaved:'Saved to your bill diary!', hiUpdatedMsg:'Updated that month\'s record.',
+  hiDeleted:'Record removed', hiErrAmount:'Please enter the amount you paid first.',
+  hiListTitle:'Everything you\'ve recorded', hiChartTitle:'Your real bills, month by month',
+  hiEmptyTitle:'No bills recorded yet', hiEmptyDesc:'Add your first bill on the left — once you have 2 months, your trend chart appears here.',
+  hiStatLatest:'Latest bill', hiStatChange:'vs previous month', hiStatAvg:'Average per month', hiStatCount:'Months recorded',
+  hiUnits:'{n} units', hiNoKwh:'units not recorded', hiFirstRec:'first record',
+  baSaveHist:'Save this bill to my diary',
+  tourHistTitle:'Your Bill Diary', tourHistBody:'Each month, jot down the amount from your real bill. The app draws a chart so you can see if your savings are actually working.',
+  infoBtnLbl:'How to use this page',
   dashAnalyzerCardTitle:'Analyze your electricity bill with AI',
   dashAnalyzerCardSub:'Upload your bill, see what is driving the cost, and get savings tips',
   baTitle:'Bill Analyzer',
@@ -1059,8 +1137,8 @@ en:{
   commShareTitle:'Share a tip', commPlaceholder:'Got a trick that cut your bill? Share it…', commPostBtn:'Post Anonymously',
   commEmpty:'No tips yet — be the first!', commLike:'Helpful', commReply:'Reply',
   commReplyPlaceholder:'Write a reply…', commSend:'Send', commToastPost:'Tip posted!', commToastReply:'Reply sent!', commToastEmpty:'Please write something first.',
-  ecobotSubtitle:'AI Energy Advisor', ecobotPlaceholder:'Ask about your energy bill…',
-  ecobotQuick1:'How can I save more?', ecobotQuick2:'Explain my bill', ecobotQuick3:'Tell me about solar', ecobotQuick4:'Compare strategies',
+  ecobotSubtitle:'Your AI helper for home electricity', ecobotPlaceholder:'Try asking "Is my bill going up or down?"…',
+  ecobotQuick1:'How can I save more?', ecobotQuick2:'What\'s my bill this month?', ecobotQuick3:'Which appliance costs the most?', ecobotQuick4:'Is my bill going up or down?',
   toastEmptyPost:'Write something first.',
   justNow:'Just now', minAgo:'{n}m ago', hourAgo:'{n}h ago', dayAgo:'{n}d ago',
   svLifestyleTitle:'Your Lifestyle Profile', svLifestyleSaved:'Auto-saved',
@@ -1083,7 +1161,7 @@ en:{
   landFeatBillDesc:"Calculate your bill with Thailand's real progressive MEA/PEA tariffs and Ft charges.",
   landFeatSVDesc:'Get personalised saving strategies based on your lifestyle and household habits.',
   landFeatCommDesc:'Share and discover real money-saving tricks — anonymous, no account needed.',
-  landFeatForecast:'Bill Forecast', landFeatForecastDesc:"Predict next month's bill ahead of time so you can plan your budget with confidence.",
+  landFeatForecast:'Bill Diary', landFeatForecastDesc:"Record each month's real bill and watch your savings progress on a clear chart.",
   landHowKicker:'HOW IT WORKS', landHowTitle:'Start saving in 3 simple steps',
   landStep1Title:'Add your appliances', landStep1Desc:'Log the devices in your home in minutes — no meter rewiring required.',
   landStep2Title:'Let AI learn your home', landStep2Desc:'SmartVolt analyses your usage and lifestyle to truly understand your home.',
@@ -1096,9 +1174,9 @@ th:{
   guestBannerCta:'เข้าสู่ระบบเพื่อบันทึก',
   tourStartBtn:'สอนวิธีใช้งาน', tourSkip:'ข้าม', tourBack:'ย้อนกลับ', tourNext:'ถัดไป', tourFinish:'เริ่มใช้งาน', tourStepOf:'ขั้นที่ {n} จาก {total}',
   tour1Title:'ยินดีต้อนรับสู่ Anutung Electric', tour1Body:'ในไม่กี่ขั้นตอน คุณจะรู้วิธีติดตามค่าไฟ จำลองค่าใช้จ่าย และรับแผนประหยัดจาก AI กด “ถัดไป” เพื่อเริ่มได้เลย',
-  tour2Title:'แดชบอร์ด', tour2Body:'ดูค่าไฟรายเดือน แนวโน้มการใช้ และความเสี่ยงบิลแพงในที่เดียว — อัปเดตอัตโนมัติเมื่อคุณเพิ่มอุปกรณ์',
+  tour2Title:'หน้าหลัก', tour2Body:'ดูค่าไฟรายเดือน แนวโน้มการใช้ และความเสี่ยงบิลแพงในที่เดียว — อัปเดตอัตโนมัติเมื่อคุณเพิ่มเครื่องใช้ไฟฟ้า',
   tour3Title:'เพิ่มเครื่องใช้ไฟฟ้า', tour3Body:'กด “เพิ่มอุปกรณ์” แล้วกรอกว่าใช้อะไร กินไฟกี่วัตต์ และใช้กี่ชั่วโมงต่อวัน ยิ่งใส่ครบ ผลวิเคราะห์ยิ่งแม่นยำ',
-  tour4Title:'จำลองค่าไฟ', tour4Body:'ใส่จำนวนหน่วย (kWh) เพื่อดูค่าไฟที่ควรเป็นตามอัตราก้าวหน้า MEA/PEA จริงของไทย',
+  tour4Title:'คำนวณค่าไฟ', tour4Body:'ใส่จำนวนหน่วยไฟ (ดูได้จากบิล) เพื่อดูว่าค่าไฟควรจะเป็นเท่าไหร่ตามอัตราจริงของการไฟฟ้า',
   tour5Title:'SmartVolt — แผนจาก AI', tour5Body:'เลือกโปรไฟล์ไลฟ์สไตล์ กรอกอุปกรณ์ของคุณ แล้วกด “วิเคราะห์ด้วย AI” เพื่อรับแผนประหยัดเฉพาะคุณ',
   tour6Title:'ติดตามผล & เข้าสู่ระบบ', tour6Body:'หลังลองทำตามเคล็ดลับ บันทึกบิลใหม่ใน SmartVolt เพื่อให้ AI ปรับคำแนะนำ และเข้าสู่ระบบ (มุมขวาบน) เพื่อบันทึกข้อมูลทุกเครื่อง',
   svApTitle:'อุปกรณ์ที่คุณใช้', svApSub:'กรอกว่าใช้อะไร กี่ชั่วโมงต่อวัน และกินไฟกี่วัตต์ — แผนจะถูกคำนวณจากข้อมูลจริงของคุณ',
@@ -1114,13 +1192,27 @@ th:{
   svAdjUnder:'ผลจริง ({actual}%) ต่ำกว่าเป้าหมาย {expected}% — แผนด้านล่างถูกปรับให้เข้มขึ้นด้วยมาตรการที่ได้ผลแรงกว่า',
   svAdjOn:'คุณทำได้ตามเป้า ({actual}% เทียบ {expected}%) — ถึงเวลาขยับไปสู่การอัปเกรดขั้นถัดไป',
   svAdjPickTip:'เลือกอย่างน้อยเคล็ดลับที่คุณได้ลองทำจริง',
-  navDashboard:'แดชบอร์ด', navAppliances:'ติดตามเครื่องใช้ไฟฟ้า', navBillSim:'จำลองค่าไฟ', navSmartVolt:'SmartVolt', navCommunity:'ชุมชน',
-  tabDashboard:'แดชบอร์ด', tabAppliances:'อุปกรณ์', tabBillSim:'จำลองบิล', tabSmartVolt:'SmartVolt', tabCommunity:'ชุมชน',
-  navAnalyzer:'วิเคราะห์บิล',
-  dashAnalyzerCardTitle:'วิเคราะห์บิลค่าไฟด้วย AI',
-  dashAnalyzerCardSub:'อัปโหลดบิล หาสาเหตุที่ค่าไฟแพง พร้อมวิธีประหยัด',
-  baTitle:'วิเคราะห์บิลค่าไฟ',
-  baSub:'อัปโหลดบิลแล้วให้ระบบอัจฉริยะหาว่าทำไมค่าไฟแพง และจะลดยังไง',
+  navDashboard:'หน้าหลัก', navAppliances:'เครื่องใช้ไฟฟ้า', navBillSim:'คำนวณค่าไฟ', navSmartVolt:'ผู้ช่วยประหยัดไฟ', navCommunity:'เคล็ดลับ',
+  tabDashboard:'หน้าหลัก', tabAppliances:'เครื่องใช้', tabBillSim:'คำนวณ', tabSmartVolt:'ประหยัด', tabCommunity:'เคล็ดลับ',
+  navAnalyzer:'ตรวจบิลค่าไฟ',
+  navHistory:'สมุดค่าไฟ', tabHistory:'สมุดค่าไฟ',
+  hiTitle:'สมุดค่าไฟ', hiSub:'จดบิลค่าไฟจริงของแต่ละเดือนเก็บไว้ — เห็นชัดๆ ว่าบ้านเราใช้ไฟมากขึ้นหรือน้อยลง',
+  hiFormTitle:'จดบิลค่าไฟ',
+  hiMonthLbl:'เดือน', hiYearLbl:'ปี', hiKwhLbl:'จำนวนหน่วย (ดูจากบิล ไม่บังคับ)', hiAmountLbl:'ยอดเงินที่จ่าย (บาท)',
+  hiNoteLbl:'โน้ตเพิ่มเติม (ไม่บังคับ)', hiNotePh:'เช่น เดือนนี้ร้อนมาก มีแขกมาพัก…',
+  hiSaveBtn:'บันทึกลงสมุด', hiSaved:'บันทึกลงสมุดค่าไฟแล้ว!', hiUpdatedMsg:'อัปเดตข้อมูลเดือนนั้นให้แล้ว',
+  hiDeleted:'ลบรายการแล้ว', hiErrAmount:'กรอกยอดเงินที่จ่ายก่อนนะ',
+  hiListTitle:'รายการที่จดไว้ทั้งหมด', hiChartTitle:'ค่าไฟจริงของบ้านคุณ เดือนต่อเดือน',
+  hiEmptyTitle:'ยังไม่มีบิลที่จดไว้', hiEmptyDesc:'เริ่มจดบิลเดือนแรกทางซ้ายได้เลย — พอครบ 2 เดือนจะเห็นกราฟเปรียบเทียบตรงนี้',
+  hiStatLatest:'บิลล่าสุด', hiStatChange:'เทียบเดือนก่อน', hiStatAvg:'เฉลี่ยต่อเดือน', hiStatCount:'จดไว้แล้ว (เดือน)',
+  hiUnits:'{n} หน่วย', hiNoKwh:'ไม่ได้จดหน่วย', hiFirstRec:'เดือนแรกที่จด',
+  baSaveHist:'บันทึกบิลนี้ลงสมุดค่าไฟ',
+  tourHistTitle:'สมุดค่าไฟของคุณ', tourHistBody:'ทุกเดือนพอบิลมาถึง จดยอดเงินเก็บไว้ แอปจะวาดกราฟให้เห็นเลยว่าที่พยายามประหยัดไปได้ผลจริงไหม',
+  infoBtnLbl:'วิธีใช้หน้านี้',
+  dashAnalyzerCardTitle:'ให้ AI ช่วยตรวจบิลค่าไฟของคุณ',
+  dashAnalyzerCardSub:'กรอกตัวเลขจากบิล หาสาเหตุที่ค่าไฟแพง พร้อมวิธีประหยัด',
+  baTitle:'ตรวจบิลค่าไฟ',
+  baSub:'กรอกตัวเลขจากบิล แล้วให้ AI ช่วยหาว่าทำไมค่าไฟแพง และจะลดยังไง',
   baUploadTitle:'อัปโหลดบิล',
   baDropTitle:'ลากรูปหรือ PDF มาวางที่นี่',
   baDropHint:'หรือแตะเพื่อเลือกไฟล์ (สูงสุด 8 MB)',
@@ -1152,14 +1244,14 @@ th:{
   heroBadge:'ระบบอัจฉริยะประหยัดพลังงานสำหรับบ้านไทย',
   heroTitle:'ควบคุม', heroTitleAccent:'ค่าไฟของคุณ',
   heroSub:'ติดตามทุกวัตต์ จำลองค่าไฟตามอัตรา MEA/PEA จริงของไทย และรับแผนประหยัดพลังงานเฉพาะบุคคลจาก AI',
-  heroCta:'เริ่มต้นฟรี', heroStartBtn:'เริ่มประหยัดฟรี', heroSimBtn:'ลองจำลองค่าไฟ',
+  heroCta:'เริ่มต้นฟรี', heroStartBtn:'เริ่มประหยัดฟรี', heroSimBtn:'ลองคำนวณค่าไฟ',
   quickEstTitle:'ประเมินการประหยัดอย่างรวดเร็ว', heroSliderLabel:'ค่าไฟเฉลี่ยต่อเดือน (฿)', heroSaveLabel:'คุณอาจประหยัดได้ถึง',
-  featDash:'แดชบอร์ด', featAp:'ติดตามเครื่องใช้', featBill:'จำลองค่าไฟ', featSV:'SmartVolt AI', featComm:'ชุมชน',
+  featDash:'หน้าหลัก', featAp:'เครื่องใช้ไฟฟ้า', featBill:'คำนวณค่าไฟ', featSV:'ผู้ช่วยประหยัดไฟ AI', featComm:'เคล็ดลับ',
   dashWelcome:'ยินดีต้อนรับกลับ', dashSub:'ภาพรวมค่าไฟของคุณในเดือนนี้',
   dashBill:'ค่าไฟต่อเดือน', dashUsage:'การใช้ไฟต่อเดือน', dashAppliances:'เครื่องใช้ไฟฟ้าที่ติดตาม', dashSavings:'ประหยัดได้เพิ่ม',
   dashBasedOn:'จาก {n} รายการ', dashPerMonth:'เดือนนี้', dashActive:'อุปกรณ์ที่ใช้งาน', dashOptimized:'หากปรับให้เหมาะสม',
   dashTrendTitle:'แนวโน้มค่าไฟรายเดือน', dashBreakdownTitle:'การใช้ไฟตามอุปกรณ์', dashRiskTitle:'ดัชนีความเสี่ยงค่าไฟ', dashForecastTitle:'คาดการณ์เดือนถัดไป',
-  dashNoData:'เพิ่มเครื่องใช้ไฟฟ้าเพื่อดูการวิเคราะห์', dashForecastCta:'ดูคำแนะนำ SmartVolt →',
+  dashNoData:'เพิ่มเครื่องใช้ไฟฟ้าเพื่อดูการวิเคราะห์', dashForecastCta:'ดูวิธีประหยัดที่เหมาะกับบ้านคุณ →',
   riskLow:'เสี่ยงต่ำ', riskMed:'ปานกลาง', riskHigh:'เสี่ยงสูง',
   apTitle:'ติดตามเครื่องใช้ไฟฟ้า', apSub:'บันทึกอุปกรณ์ของคุณเพื่อคำนวณต้นทุนที่แท้จริง',
   apAddBtn:'เพิ่มเครื่องใช้ไฟฟ้า', apTotalLbl:'ค่าไฟประมาณการรวมต่อเดือน',
@@ -1169,7 +1261,7 @@ th:{
   apPreview:'ค่าใช้จ่ายประมาณการ', apUpdate:'อัปเดต', apAdd:'เพิ่มเครื่องใช้ไฟฟ้า', cancel:'ยกเลิก',
   apAdded:'เพิ่มเครื่องใช้ไฟฟ้าแล้ว!', apUpdated:'อัปเดตเครื่องใช้ไฟฟ้าแล้ว!', apDeleted:'ลบเครื่องใช้ไฟฟ้าแล้ว',
   apOn:'ใช้งานอยู่', apOff:'ปิด', apDayShort:'วัน',
-  bsTitle:'จำลองค่าไฟ', bsSub:'คำนวณค่าไฟตามอัตราก้าวหน้า MEA/PEA ของไทย',
+  bsTitle:'คำนวณค่าไฟ', bsSub:'ใส่จำนวนหน่วยจากบิล แล้วดูว่าค่าไฟควรจะเป็นเท่าไหร่ตามอัตราจริงของการไฟฟ้า',
   bsFormTitle:'รายละเอียดการใช้ไฟ', bsUsageLabel:'การใช้ไฟต่อเดือน (kWh)', bsFtLabel:'ค่า Ft (บาท/หน่วย)',
   bsCategoryLabel:'ประเภทอัตราค่าไฟ', bsCatResidential:'บ้านอยู่อาศัย ประเภท 1.2',
   bsCalcBtn:'คำนวณค่าไฟ', bsTotalLbl:'ค่าไฟที่ต้องชำระ', bsBaseLbl:'ค่าไฟฟ้าฐาน',
@@ -1192,8 +1284,8 @@ th:{
   commShareTitle:'แบ่งปันเคล็ดลับ', commPlaceholder:'มีเคล็ดลับที่ช่วยลดค่าไฟไหม? แบ่งปันได้เลย…', commPostBtn:'โพสต์แบบไม่ระบุตัวตน',
   commEmpty:'ยังไม่มีเคล็ดลับ — เป็นคนแรก!', commLike:'มีประโยชน์', commReply:'ตอบกลับ',
   commReplyPlaceholder:'เขียนคำตอบ…', commSend:'ส่ง', commToastPost:'โพสต์เคล็ดลับแล้ว!', commToastReply:'ส่งคำตอบแล้ว!', commToastEmpty:'กรุณาเขียนข้อความก่อน',
-  ecobotSubtitle:'ที่ปรึกษาพลังงาน AI', ecobotPlaceholder:'ถามเกี่ยวกับค่าไฟของคุณ…',
-  ecobotQuick1:'ฉันจะประหยัดไฟได้อย่างไร?', ecobotQuick2:'อธิบายค่าไฟให้ฉัน', ecobotQuick3:'บอกฉันเกี่ยวกับโซลาร์เซลล์', ecobotQuick4:'เปรียบเทียบกลยุทธ์',
+  ecobotSubtitle:'ผู้ช่วย AI เรื่องค่าไฟบ้านคุณ', ecobotPlaceholder:'ลองถาม เช่น "ค่าไฟบ้านฉันขึ้นหรือลง"…',
+  ecobotQuick1:'ประหยัดค่าไฟยังไงดี?', ecobotQuick2:'เดือนนี้ค่าไฟประมาณเท่าไหร่?', ecobotQuick3:'เครื่องใช้ไหนกินไฟที่สุด?', ecobotQuick4:'ค่าไฟบ้านฉันขึ้นหรือลง?',
   toastEmptyPost:'กรุณาเขียนข้อความก่อน',
   justNow:'เมื่อสักครู่', minAgo:'{n} นาทีที่แล้ว', hourAgo:'{n} ชั่วโมงที่แล้ว', dayAgo:'{n} วันที่แล้ว',
   svLifestyleTitle:'โปรไฟล์ไลฟ์สไตล์ของคุณ', svLifestyleSaved:'บันทึกอัตโนมัติ',
@@ -1216,7 +1308,7 @@ th:{
   landFeatBillDesc:'คำนวณค่าไฟตามอัตราก้าวหน้า MEA/PEA จริงของไทย พร้อมค่า Ft',
   landFeatSVDesc:'รับกลยุทธ์ประหยัดเฉพาะบุคคล อิงจากไลฟ์สไตล์และพฤติกรรมในครัวเรือนของคุณ',
   landFeatCommDesc:'แบ่งปันและค้นพบเคล็ดลับประหยัดเงินจริง — ไม่ระบุตัวตน ไม่ต้องสมัครสมาชิก',
-  landFeatForecast:'พยากรณ์ค่าไฟ', landFeatForecastDesc:'คาดการณ์ค่าไฟเดือนถัดไปล่วงหน้า ช่วยให้วางแผนงบประมาณได้อย่างมั่นใจ',
+  landFeatForecast:'สมุดค่าไฟ', landFeatForecastDesc:'จดบิลค่าไฟจริงของทุกเดือนเก็บไว้ แล้วดูกราฟชัดๆ ว่าประหยัดได้ผลแค่ไหน',
   landHowKicker:'วิธีใช้งาน', landHowTitle:'เริ่มประหยัดได้ใน 3 ขั้นตอน',
   landStep1Title:'เพิ่มเครื่องใช้ไฟฟ้า', landStep1Desc:'บันทึกอุปกรณ์ในบ้านได้ในไม่กี่นาที ไม่ต้องเดินสายมิเตอร์ใหม่',
   landStep2Title:'ให้ AI เรียนรู้บ้านคุณ', landStep2Desc:'SmartVolt วิเคราะห์การใช้ไฟและไลฟ์สไตล์ เพื่อเข้าใจบ้านของคุณอย่างแท้จริง',
@@ -1244,6 +1336,7 @@ var state = {
   lifestyle:{ occupation:'', householdSize:3, flags:{ acAllDay:false, gaming:false, waterHeater:false, nightOwl:false, multipleAC:false } },
   billSim:{ kwh:300 },
   billAnalyzer:{ kwh:'', amount:'', prev:'', monthIdx:null },
+  history:[], // สมุดค่าไฟ: [{id, ym:'2026-06', kwh|null, amount, note, ts}]
   tariff:JSON.parse(JSON.stringify(DEFAULT_TARIFF)),
   handle:'', handleColor:'#0F4C81',
   community:[],
@@ -1389,6 +1482,11 @@ function baAskEcobot(a){
   if(inp){ inp.value=tf('baEcobotQ',{kwh:Math.round(a.kwh),amt:money(a.amount)}); }
   if(typeof sendEcobotMsg==='function') sendEcobotMsg();
 }
+function baSaveToHistory(a){
+  var now=new Date(), y=now.getFullYear();
+  if(a.monthIdx>now.getMonth()) y--; // e.g. a December bill entered in January
+  addHistoryEntry(y,a.monthIdx,a.amount,a.kwh,'');
+}
 function baRenderResult(a,animate){
   var box=document.getElementById('baResult'); if(!box) return;
   if(animate){
@@ -1423,10 +1521,12 @@ function baRenderResult(a,animate){
     +'<div style="position:relative;height:150px"><canvas id="baCompareChart"></canvas></div>'
     +'<p class="ba-eyebrow mt-5 mb-1">'+esc(t('baSavingsTitle'))+'</p>'+savingsHtml
     +'<div class="mt-3 p-3 rounded-xl flex items-center gap-2" style="background:var(--surface-2)"><i data-lucide="piggy-bank" class="icon-sm" style="color:var(--text-sec)"></i><span class="text-xs font-800" style="color:var(--text-sec)">'+esc(tf('baSavingsTotal',{amt:money(totalSave)}))+'</span></div>'
-    +'<button id="baAskBot" class="w-full mt-4 flex items-center justify-center gap-2 border-2 font-700 text-sm px-4 py-3 rounded-2xl transition-all duration-200" style="border-color:var(--border-col);color:var(--text-sec)"><i data-lucide="message-circle" class="icon-sm"></i>'+esc(t('baAskEcobot'))+'</button>';
+    +'<button id="baSaveHist" class="w-full mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-700 text-sm px-4 py-3 rounded-2xl shadow hover:shadow-md transition-all duration-200"><i data-lucide="book-open" class="icon-sm"></i>'+esc(t('baSaveHist'))+'</button>'
+    +'<button id="baAskBot" class="w-full mt-2.5 flex items-center justify-center gap-2 border-2 font-700 text-sm px-4 py-3 rounded-2xl transition-all duration-200" style="border-color:var(--border-col);color:var(--text-sec)"><i data-lucide="message-circle" class="icon-sm"></i>'+esc(t('baAskEcobot'))+'</button>';
   lucide.createIcons({nodes:[box]});
   baBuildCompareChart(a);
   var askBtn=document.getElementById('baAskBot'); if(askBtn) askBtn.addEventListener('click',function(){baAskEcobot(a);});
+  var shBtn=document.getElementById('baSaveHist'); if(shBtn) shBtn.addEventListener('click',function(){baSaveToHistory(a);});
 }
 function renderBillAnalyzer(){
   baPopulateMonths();
@@ -1476,13 +1576,14 @@ function closeModal(){ var ov=document.getElementById('modalOverlay'); ov.classL
 function openHelp(){
   var L=state.lang==='th';
   var items=[
-    ['layout-dashboard', L?'แดชบอร์ด':'Dashboard', L?'ดูภาพรวมค่าไฟ แนวโน้มการใช้ และความเสี่ยงบิลแพงของเดือนนี้':'Overview of your bill, usage trend, and high-bill risk'],
-    ['scan-line', L?'วิเคราะห์บิล':'Bill Analyzer', L?'อัปโหลดรูปบิล/PDF หรือกรอกหน่วย+ยอดเงิน แล้ว AI จะหาสาเหตุที่แพงและวิธีประหยัด — อัปเดตอัตโนมัติขณะพิมพ์':'Upload a bill photo/PDF or type your units + amount — AI finds the causes and savings, updating live as you type'],
-    ['plug', L?'เครื่องใช้ไฟ':'Appliances', L?'เพิ่มเครื่องใช้ไฟในบ้าน (กำลังไฟ/ชั่วโมงใช้) ยิ่งใส่ครบ ผลวิเคราะห์ยิ่งแม่น':'Add your appliances (watts + hours/day). The more you add, the more accurate the analysis'],
-    ['calculator', L?'จำลองค่าไฟ':'Bill Simulator', L?'ใส่จำนวนหน่วย (kWh) เพื่อดูค่าไฟที่ควรเป็นตามอัตรา MEA/PEA จริง':'Enter your units (kWh) to see the expected bill on real MEA/PEA tariffs'],
-    ['sparkles', 'SmartVolt', L?"ตอบคำถามไลฟ์สไตล์ + เลือกโปรไฟล์ แล้วกด 'วิเคราะห์ด้วย AI' เพื่อดูแผนประหยัดเฉพาะคุณ":"Answer the lifestyle questions, pick a profile, then tap 'Analyze with AI' for a tailored savings plan"],
-    ['user-circle', L?'เข้าสู่ระบบ & เซฟข้อมูล':'Sign in & save', L?'ล็อกอินด้วย Google (มุมขวาบน) เพื่อเซฟทุกอย่างขึ้นคลาวด์ ตามตัวทุกเครื่อง · ออกจากระบบ: กดรูปโปรไฟล์ → "ออกจากระบบ"':'Sign in with Google (top-right) to save everything to the cloud across devices · Sign out: tap your profile → "Sign out"'],
-    ['settings-2', L?'ปรับแต่ง':'Settings', L?'สลับภาษา EN/ไทย, ธีมสว่าง-มืด, สกุลเงิน/หน่วย ได้ที่แถบบน · บนมือถือใช้แถบเมนูด้านล่าง':'Switch language EN/TH, light/dark theme, currency/unit on the top bar · On mobile use the bottom tab bar']
+    ['layout-dashboard', L?'หน้าหลัก':'Home', L?'ดูภาพรวมค่าไฟ แนวโน้มการใช้ และความเสี่ยงบิลแพงของเดือนนี้':'Overview of your bill, usage trend, and high-bill risk'],
+    ['book-open', L?'สมุดค่าไฟ':'Bill Diary', L?'จดยอดบิลจริงของทุกเดือนเก็บไว้ พอครบ 2 เดือนจะเห็นกราฟว่าค่าไฟขึ้นหรือลง':'Record each month\'s real bill — after 2 months you\'ll see whether it\'s going up or down'],
+    ['scan-line', L?'ตรวจบิลค่าไฟ':'Check My Bill', L?'กรอกหน่วย+ยอดเงินจากบิล (แนบรูปบิลได้) แล้ว AI จะหาสาเหตุที่แพงและวิธีประหยัด':'Type your units + amount from the bill — AI finds the causes and ways to save'],
+    ['plug', L?'เครื่องใช้ไฟฟ้า':'My Appliances', L?'เพิ่มเครื่องใช้ไฟในบ้าน (กำลังไฟ/ชั่วโมงใช้) ยิ่งใส่ครบ ผลวิเคราะห์ยิ่งแม่น':'Add your appliances (watts + hours/day). The more you add, the more accurate the analysis'],
+    ['calculator', L?'คำนวณค่าไฟ':'Cost Calculator', L?'ใส่จำนวนหน่วยจากบิล เพื่อดูค่าไฟที่ควรจะเป็นตามอัตราจริงของการไฟฟ้า':'Enter your units to see the expected bill on real MEA/PEA tariffs'],
+    ['sparkles', L?'ผู้ช่วยประหยัดไฟ':'Savings Coach', L?"ตอบคำถามสั้นๆ เกี่ยวกับบ้านคุณ แล้วกด 'วิเคราะห์ด้วย AI' เพื่อดูแผนประหยัดเฉพาะคุณ":"Answer a few questions about your home, then tap 'Analyze with AI' for a tailored savings plan"],
+    ['user-circle', L?'เข้าสู่ระบบ & เก็บข้อมูล':'Sign in & save', L?'เข้าสู่ระบบด้วย Google (มุมขวาบน) เพื่อเก็บข้อมูลไว้ถาวรและดูได้ทุกเครื่อง':'Sign in with Google (top-right) to save everything to the cloud across devices'],
+    ['info', L?'ปุ่ม ⓘ ข้างชื่อหน้า':'The ⓘ button', L?'ทุกหน้ามีปุ่ม ⓘ ข้างหัวข้อ กดเพื่อดูวิธีใช้หน้านั้นแบบทีละขั้น':'Every page has an ⓘ button next to its title — tap it for step-by-step instructions']
   ];
   var rows=items.map(function(it){
     return '<div class="flex items-start gap-3 py-3 border-t" style="border-color:var(--border-light-col)">'
@@ -1502,13 +1603,100 @@ function openHelp(){
 }
 document.getElementById('modalOverlay').addEventListener('click',function(e){ if(e.target.id==='modalOverlay') closeModal(); });
 
+// ── Per-page "how to use" info modals (ปุ่ม ⓘ) ─────────
+var PAGE_INFO={
+  dashboard:{ic:'gauge',titleKey:'navDashboard',steps:{
+    th:['หน้านี้คือภาพรวมของบ้านคุณ ตัวเลขคำนวณจากเครื่องใช้ไฟฟ้าที่คุณกรอกไว้',
+        'การ์ดด้านบนบอกค่าไฟโดยประมาณต่อเดือน และเงินที่น่าจะประหยัดได้',
+        'กราฟแนวโน้มจะเปลี่ยนเป็นตัวเลขจริงทันที เมื่อคุณจด "สมุดค่าไฟ" ครบ 2 เดือน',
+        'อยากให้แม่นขึ้น? ไปที่หน้า "เครื่องใช้ไฟฟ้า" แล้วเพิ่มของที่ใช้จริงในบ้าน'],
+    en:['This page is your home overview — every number comes from the appliances you entered',
+        'The top cards show your estimated monthly bill and how much you could save',
+        'The trend chart switches to your real numbers once you record 2 months in the Bill Diary',
+        'Want it more accurate? Go to "My Appliances" and add what you actually use']}},
+  history:{ic:'book-open',titleKey:'hiTitle',steps:{
+    th:['ทุกเดือนพอบิลค่าไฟมาถึง ให้จดยอดเงิน (และจำนวนหน่วยถ้ามี) ลงในฟอร์มด้านซ้าย',
+        'เลือกเดือน/ปีให้ตรงกับบิล แล้วกด "บันทึกลงสมุด"',
+        'พอจดครบ 2 เดือนขึ้นไป จะเห็นกราฟชัดๆ ว่าค่าไฟบ้านคุณขึ้นหรือลง',
+        'ถ้าจดเดือนเดิมซ้ำ ระบบจะแก้ตัวเลขให้ ไม่บันทึกซ้ำ',
+        'เข้าสู่ระบบด้วย Google เพื่อเก็บข้อมูลไว้ถาวรและเปิดดูได้ทุกเครื่อง'],
+    en:['When each bill arrives, write the amount (and units if shown) in the form on the left',
+        'Pick the month/year that matches the bill, then tap "Save to diary"',
+        'Once you have 2+ months, the chart clearly shows if your bill is going up or down',
+        'Saving the same month again updates it — no duplicates',
+        'Sign in with Google to keep your records permanently on every device']}},
+  billanalyzer:{ic:'scan-line',titleKey:'baTitle',steps:{
+    th:['กรอกจำนวนหน่วยและยอดเงินจากบิลของคุณ (จะแนบรูปถ่ายบิลไว้ด้วยก็ได้)',
+        'ระบบจะบอกทันทีว่าบิลนี้แพงกว่าปกติไหม และอะไรน่าจะเป็นสาเหตุ',
+        'เลื่อนลงดูวิธีประหยัดที่แนะนำ พร้อมจำนวนเงินที่คาดว่าจะลดได้',
+        'กด "บันทึกบิลนี้ลงสมุดค่าไฟ" เพื่อเก็บตัวเลขไว้ดูย้อนหลัง'],
+    en:['Type the units and amount from your bill (you can attach a photo of it too)',
+        'The app tells you right away if this bill is higher than usual, and what likely caused it',
+        'Scroll down for recommended ways to save, with the amount each one is worth',
+        'Tap "Save this bill to my diary" to keep the numbers for later']}},
+  appliances:{ic:'plug',titleKey:'apTitle',steps:{
+    th:['กด "เพิ่มเครื่องใช้ไฟฟ้า" แล้วเลือกของที่มีในบ้าน เช่น แอร์ ตู้เย็น ทีวี',
+        'บอกว่ากินไฟกี่วัตต์ (มีค่าแนะนำให้เลือก) และใช้วันละกี่ชั่วโมง',
+        'แอปจะคำนวณให้เลยว่าแต่ละชิ้นกินเงินเดือนละกี่บาท',
+        'ชิ้นไหนช่วงนี้ไม่ได้ใช้ กดปิดชั่วคราวได้ ไม่ต้องลบทิ้ง'],
+    en:['Tap "Add Appliance" and pick what you have at home — AC, fridge, TV…',
+        'Enter its wattage (presets are provided) and hours used per day',
+        'The app instantly shows how many baht each item costs per month',
+        'Not using something right now? Toggle it off instead of deleting it']}},
+  billsim:{ic:'calculator',titleKey:'bsTitle',steps:{
+    th:['ใส่จำนวนหน่วยไฟ (ดูได้จากบิล) หรือลากแถบเลื่อน',
+        'กด "คำนวณค่าไฟ" เพื่อดูยอดที่ควรจะจ่ายตามอัตราจริงของการไฟฟ้า',
+        'ตารางด้านขวาแสดงว่าไฟแต่ละช่วงหน่วยคิดราคาไม่เท่ากัน — ยิ่งใช้มาก ยิ่งแพงต่อหน่วย',
+        'ถ้าบ้านคุณใช้อัตราพิเศษ แก้ตัวเลขเองได้ในกล่อง "ตั้งค่า"'],
+    en:['Enter your units (from the bill) or drag the slider',
+        'Tap "Calculate" to see what you should be paying on the official tariff',
+        'The table on the right shows how each usage tier costs a different rate — the more you use, the pricier each unit',
+        'On a special tariff? Edit the numbers in the settings box']}},
+  smartvolt:{ic:'sparkles',titleKey:'svTitle',steps:{
+    th:['ตอบคำถามสั้นๆ เกี่ยวกับบ้านคุณ แล้วเลือกโปรไฟล์ที่ใกล้เคียงที่สุด',
+        'กด "วิเคราะห์ด้วย AI" เพื่อรับแผนประหยัดที่เรียงตามความคุ้มค่า',
+        'ลองทำตามเคล็ดลับสัก 1–2 ข้อ แล้วกลับมาบันทึกผลว่าบิลลดลงจริงไหม',
+        'AI จะปรับแผนใหม่ให้จากผลจริงของคุณ'],
+    en:['Answer a few short questions about your home, then pick the closest profile',
+        'Tap "Analyze with AI" for a savings plan ranked by impact',
+        'Try one or two tips, then come back and log whether your bill really dropped',
+        'The AI adjusts your plan based on your real results']}},
+  community:{ic:'users',titleKey:'commTitle',steps:{
+    th:['อ่านเคล็ดลับประหยัดไฟจากผู้ใช้คนอื่นๆ',
+        'กดหัวใจให้เคล็ดลับที่ชอบ หรือกดตอบกลับเพื่อคุยต่อ',
+        'แชร์เคล็ดลับของคุณเองได้เลย — ใช้ชื่อสมมติ ไม่เปิดเผยตัวตน'],
+    en:['Read energy-saving tips from other users',
+        'Like the tips you love, or reply to keep the conversation going',
+        'Share your own tip — you post under a nickname, fully anonymous']}}
+};
+function openPageInfo(sec){
+  var info=PAGE_INFO[sec]; if(!info) return;
+  var L=state.lang==='th';
+  var steps=info.steps[state.lang]||info.steps.en;
+  var rows=steps.map(function(s,i){
+    return '<div class="flex items-start gap-3 py-3'+(i?' border-t':'')+'" style="border-color:var(--border-light-col)">'
+      +'<div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-800 text-xs" style="background:var(--surface-3);color:#2D7DD2">'+(i+1)+'</div>'
+      +'<p class="text-sm leading-relaxed pt-1" style="color:var(--text-pri)">'+esc(s)+'</p></div>';
+  }).join('');
+  var html='<div class="p-6">'
+    +'<div class="flex items-center justify-between mb-4">'
+    +'<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-navy-500 to-navy-400 flex items-center justify-center shadow-md flex-shrink-0"><i data-lucide="'+info.ic+'" class="icon-sm text-white"></i></div>'
+    +'<div><p class="text-[11px] font-800 uppercase tracking-wide" style="color:var(--text-muted-col)">'+(L?'วิธีใช้หน้านี้':'How to use this page')+'</p>'
+    +'<h3 class="text-lg font-900" style="color:var(--text-pri)">'+esc(t(info.titleKey))+'</h3></div></div>'
+    +'<button onclick="closeModal()" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-navy-50 flex-shrink-0" style="color:var(--text-muted-col)" aria-label="Close"><i data-lucide="x" class="icon-sm"></i></button></div>'
+    +rows
+    +'<button onclick="closeModal()" class="w-full mt-5 bg-gradient-to-r from-navy-500 to-navy-400 text-white font-800 text-sm py-3 rounded-xl hover:shadow-md transition-all">'+(L?'เข้าใจแล้ว':'Got it')+'</button>'
+    +'</div>';
+  openModal(html);
+}
+
 // ── LocalStorage (login-gated) ─────────────────────────
 // Persistence rule: ONLY signed-in users get their settings saved.
 //  • Guests can use every feature in-session, but nothing is written to
 //    storage — reloading starts fresh (as requested).
 //  • Signed-in users keep a local cache (for instant load) AND sync to the
 //    cloud, so their data survives reloads and follows them across devices.
-var LS_KEYS=['ae3-auth','ae3-settings','ae3-appliances','ae3-tariff','ae3-sv','ae3-billsim','ae3-handle','ae3-community','ae3-chat','ae3-lifestyle','ae3-billanalyzer'];
+var LS_KEYS=['ae3-auth','ae3-settings','ae3-appliances','ae3-tariff','ae3-sv','ae3-billsim','ae3-handle','ae3-community','ae3-chat','ae3-lifestyle','ae3-billanalyzer','ae3-history'];
 function clearLocalCache(){ LS_KEYS.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} }); }
 function saveLS(){
   // Guests: do not persist anything locally — only push to cloud if (later) signed in.
@@ -1525,6 +1713,7 @@ function saveLS(){
     localStorage.setItem('ae3-chat',JSON.stringify(state.chatHistory));
     localStorage.setItem('ae3-lifestyle',JSON.stringify(state.lifestyle));
     localStorage.setItem('ae3-billanalyzer',JSON.stringify(state.billAnalyzer));
+    localStorage.setItem('ae3-history',JSON.stringify(state.history));
   }catch(e){}
   if(typeof schedulePush==='function') schedulePush();
 }
@@ -1559,6 +1748,8 @@ function loadLS(){
     if(ls) state.lifestyle=Object.assign(state.lifestyle,ls);
     var ba=JSON.parse(localStorage.getItem('ae3-billanalyzer')||'null');
     if(ba) state.billAnalyzer=Object.assign(state.billAnalyzer,ba);
+    var hi=JSON.parse(localStorage.getItem('ae3-history')||'null');
+    if(hi&&Array.isArray(hi)) state.history=hi;
   }catch(e){state.handle=genHandle();state.handleColor=colorForHandle(state.handle);}
 }
 
@@ -1601,7 +1792,7 @@ function serializeState(){
     appliances:state.appliances, nextApId:state.nextApId, tariff:state.tariff,
     sv:state.sv, billSim:state.billSim, billAnalyzer:state.billAnalyzer, handle:state.handle, handleColor:state.handleColor,
     community:state.community, chatHistory:state.chatHistory, lifestyle:state.lifestyle,
-    profile:state.profile, lastBillAnalysis:state.lastBillAnalysis||null };
+    profile:state.profile, lastBillAnalysis:state.lastBillAnalysis||null, history:state.history };
 }
 function applyRemoteState(d){
   if(!d) return;
@@ -1619,6 +1810,7 @@ function applyRemoteState(d){
     if(d.lifestyle) state.lifestyle=Object.assign(state.lifestyle,d.lifestyle);
     if(typeof d.profile!=='undefined') state.profile=d.profile;
     if(typeof d.lastBillAnalysis!=='undefined') state.lastBillAnalysis=d.lastBillAnalysis;
+    if(d.history&&Array.isArray(d.history)) state.history=d.history;
     saveLS();
     applyTheme(state.theme);
     if(typeof initSeg==='function'){ initSeg('segUnit','unit',state.unit); }
@@ -1847,6 +2039,7 @@ function applyStrings(){
 function renderEverything(){
   applyStrings();
   if(state.activeSec==='dashboard') renderDashboard();
+  if(state.activeSec==='history') renderHistory();
   if(state.activeSec==='appliances') renderAppliancesPage();
   if(state.activeSec==='billsim') renderBillSim();
   if(state.activeSec==='billanalyzer') renderBillAnalyzer();
@@ -1858,6 +2051,7 @@ function renderEverything(){
 // ── onSection (called on navigation) ───────────────────
 function onSection(sec){
   if(sec==='dashboard') renderDashboard();
+  if(sec==='history') renderHistory();
   if(sec==='appliances') renderAppliancesPage();
   if(sec==='billsim') renderBillSim();
   if(sec==='billanalyzer') renderBillAnalyzer();
@@ -1875,7 +2069,7 @@ function openEcobot(){
   document.getElementById('ecobotBadge').classList.add('hidden');
   if(!state.chatBotSeeded){
     state.chatBotSeeded=true;
-    addBotMsg(state.lang==='th'?'สวัสดีครับ! ผมคือ Ecobot ที่ปรึกษาพลังงาน AI ของคุณ ถามผมได้เลยว่าจะประหยัดค่าไฟได้อย่างไร':'Hi! I\'m Ecobot, your AI energy advisor. Ask me anything about saving on your electricity bill — tariffs, solar, appliance tips, you name it.');
+    addBotMsg(state.lang==='th'?'สวัสดีครับ! ผมคือ Ecobot ผู้ช่วยเรื่องค่าไฟของบ้านคุณ ผมอ่านข้อมูลที่คุณกรอกไว้ในแอปได้ ลองกดคำถามด้านล่าง หรือถามว่า "ค่าไฟบ้านฉันขึ้นหรือลง" ดูสิครับ':'Hi! I\'m Ecobot, your home electricity helper. I can read the data you\'ve entered in this app — tap a question below, or ask "Is my bill going up or down?"');
     renderQuickReplies();
   }
 }
@@ -1888,7 +2082,12 @@ function renderDashboard(){
   var r=getApplianceResults();
   var bill=r.tariff.total, kwh=r.totalKwh, savings=bill*0.15;
   var h=document.getElementById('dashWelcomeTxt');
-  if(h) h.textContent=t('dashWelcome');
+  if(h){
+    var hr=new Date().getHours();
+    h.textContent=state.lang==='th'
+      ?(hr<12?'สวัสดีตอนเช้า ☀️':hr<17?'สวัสดีตอนบ่าย 🌤️':'สวัสดีตอนเย็น 🌙')
+      :(hr<12?'Good morning ☀️':hr<17?'Good afternoon 🌤️':'Good evening 🌙');
+  }
   document.querySelectorAll('#sec-dashboard [data-i]').forEach(function(el){el.textContent=t(el.getAttribute('data-i'));});
   var cards=document.getElementById('dashCards');
   if(!cards) return;
@@ -1907,7 +2106,15 @@ function renderDashboard(){
       +'<p class="text-'+(g?'white':'navy-950')+' text-2xl font-900 mb-0.5">'+esc(String(c.val))+'</p>'
       +'<p class="text-'+(g?'white/60':'navy-300')+' text-xs font-500">'+esc(c.sub)+'</p></div>';
   }).join('');
-  var months=monthLabels(6), trendVals=trendData(bill);
+  // Trend: use REAL recorded bills from the diary when available (2+ months)
+  var hist=historySorted(), months, trendVals;
+  if(hist.length>=2){
+    var h6=hist.slice(-6);
+    months=h6.map(function(r){return hiLabel(r.ym);});
+    trendVals=h6.map(function(r){return Math.round(r.amount);});
+  } else {
+    months=monthLabels(6); trendVals=trendData(bill);
+  }
   buildTrendChart(months,trendVals);
   var risk=bill>4500?'high':bill>2200?'med':'low';
   buildRiskChart(risk,bill);
@@ -1973,6 +2180,125 @@ function buildBreakChart(items){
     options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
       plugins:{legend:{position:'bottom',labels:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),padding:10,usePointStyle:true,pointStyleWidth:7}},
         tooltip:{callbacks:{label:function(c){var tot=c.dataset.data.reduce(function(a,b){return a+b;},0);return ' '+energy(c.parsed)+' ('+Math.round(c.parsed/tot*100)+'%)';}}}}}});
+}
+
+// ══════════════════════════════════════════════════════
+// BILL DIARY (สมุดค่าไฟ) — real monthly bill records
+// ══════════════════════════════════════════════════════
+var HI_MONTHS_SHORT={
+  en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  th:['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+};
+function historySorted(){ return (state.history||[]).slice().sort(function(a,b){ return a.ym<b.ym?-1:1; }); }
+function hiLabel(ym){
+  var p=ym.split('-'); var y=parseInt(p[0],10), m=parseInt(p[1],10)-1;
+  var name=(HI_MONTHS_SHORT[state.lang]||HI_MONTHS_SHORT.en)[m]||'';
+  var yy=state.lang==='th'?String(y+543).slice(-2):String(y).slice(-2);
+  return name+' '+yy;
+}
+function renderHistoryForm(){
+  var mSel=document.getElementById('hiMonth'), ySel=document.getElementById('hiYear');
+  if(!mSel||!ySel||mSel.options.length) return;
+  var now=new Date();
+  var months=BA_MONTHS[state.lang]||BA_MONTHS.en;
+  mSel.innerHTML=months.map(function(n,i){return '<option value="'+i+'">'+n+'</option>';}).join('');
+  mSel.value=String(now.getMonth());
+  var opts=[];
+  for(var y=now.getFullYear();y>=now.getFullYear()-3;y--) opts.push('<option value="'+y+'">'+(state.lang==='th'?(y+543)+' ('+y+')':y)+'</option>');
+  ySel.innerHTML=opts.join('');
+  ySel.value=String(now.getFullYear());
+}
+function addHistoryEntry(y,m,amount,kwh,note){
+  var ym=y+'-'+('0'+(m+1)).slice(-2);
+  var existing=(state.history||[]).filter(function(r){return r.ym===ym;})[0];
+  if(existing){
+    existing.amount=amount; if(kwh) existing.kwh=kwh; if(note) existing.note=note; existing.ts=Date.now();
+    showToast(t('hiUpdatedMsg'));
+  } else {
+    state.history.push({id:'h'+Date.now(),ym:ym,amount:amount,kwh:kwh||null,note:note||'',ts:Date.now()});
+    showToast(t('hiSaved'));
+  }
+  saveLS();
+}
+function saveHistoryRecord(){
+  var m=parseInt(document.getElementById('hiMonth').value,10);
+  var y=parseInt(document.getElementById('hiYear').value,10);
+  var amount=parseFloat(document.getElementById('hiAmount').value);
+  var kwh=parseFloat(document.getElementById('hiKwh').value);
+  var note=(document.getElementById('hiNote').value||'').trim();
+  var err=document.getElementById('hiError');
+  if(!(amount>0)){ if(err){err.textContent=t('hiErrAmount');err.classList.remove('hidden');} return; }
+  if(err) err.classList.add('hidden');
+  addHistoryEntry(y,m,amount,(kwh>0?kwh:null),note);
+  document.getElementById('hiAmount').value='';
+  document.getElementById('hiKwh').value='';
+  document.getElementById('hiNote').value='';
+  renderHistory();
+}
+function deleteHistoryRecord(id){
+  state.history=(state.history||[]).filter(function(r){return r.id!==id;});
+  saveLS(); showToast(t('hiDeleted'));
+  renderHistory();
+}
+function renderHistory(){
+  renderHistoryForm();
+  var recs=historySorted(), has=recs.length>0;
+  var content=document.getElementById('hiContent'), empty=document.getElementById('hiEmpty');
+  if(content) content.classList.toggle('hidden',!has);
+  if(empty) empty.classList.toggle('hidden',has);
+  if(!has){
+    if(state.charts.history){state.charts.history.destroy();state.charts.history=null;}
+    lucide.createIcons({nodes:[document.getElementById('sec-history')]});
+    return;
+  }
+  var latest=recs[recs.length-1], prev=recs.length>1?recs[recs.length-2]:null;
+  var avg=recs.reduce(function(s,r){return s+r.amount;},0)/recs.length;
+  var chg=prev?((latest.amount-prev.amount)/prev.amount*100):null;
+  var stats=[
+    {icon:'receipt', lbl:t('hiStatLatest'), val:money(latest.amount), sub:hiLabel(latest.ym), grad:true},
+    {icon:(chg!=null&&chg>0)?'trending-up':'trending-down', lbl:t('hiStatChange'),
+     val:chg==null?t('hiFirstRec'):((chg>0?'+':'')+chg.toFixed(0)+'%'),
+     sub:prev?(hiLabel(prev.ym)+' → '+hiLabel(latest.ym)):'',
+     col:chg==null?null:(chg>0?'#E24B4A':'#3B6D11')},
+    {icon:'wallet', lbl:t('hiStatAvg'), val:money(avg), sub:''},
+    {icon:'calendar-check', lbl:t('hiStatCount'), val:recs.length, sub:''}
+  ];
+  var statsEl=document.getElementById('hiStats');
+  if(statsEl) statsEl.innerHTML=stats.map(function(c){
+    var g=c.grad;
+    var valCls=c.col?'':('text-'+(g?'white':'navy-950')+' ');
+    return '<div class="stat-card card-spring'+(g?' blue-grad':'')+'">'
+      +'<div class="flex items-center gap-2 mb-3"><div class="w-8 h-8 rounded-lg '+(g?'bg-white/20':'bg-navy-50')+' flex items-center justify-center">'
+      +'<i data-lucide="'+c.icon+'" class="icon-sm '+(g?'text-white':'text-navy-500')+'"></i></div>'
+      +'<span class="text-'+(g?'white/70':'navy-400')+' text-xs font-600">'+esc(c.lbl)+'</span></div>'
+      +'<p class="'+valCls+'text-2xl font-900 mb-0.5"'+(c.col?' style="color:'+c.col+'"':'')+'>'+esc(String(c.val))+'</p>'
+      +'<p class="text-'+(g?'white/60':'navy-300')+' text-xs font-500">'+esc(c.sub||'')+'</p></div>';
+  }).join('');
+  var list=document.getElementById('hiList');
+  if(list) list.innerHTML=recs.slice().reverse().map(function(r){
+    var sub=(r.kwh?tf('hiUnits',{n:Math.round(r.kwh).toLocaleString()}):t('hiNoKwh'))+(r.note?' · '+r.note:'');
+    return '<div class="hi-row"><div class="hi-row-ic"><i data-lucide="zap" class="icon-sm"></i></div>'
+      +'<div class="min-w-0 flex-1"><p class="text-sm font-800" style="color:var(--text-pri)">'+esc(hiLabel(r.ym))+' — '+money(r.amount)+'</p>'
+      +'<p class="text-xs mt-0.5 truncate" style="color:var(--text-sec)">'+esc(sub)+'</p></div>'
+      +'<button class="hi-del" onclick="deleteHistoryRecord(\''+r.id+'\')" aria-label="Delete record"><i data-lucide="trash-2" class="icon-sm"></i></button></div>';
+  }).join('');
+  buildHistoryChart(recs);
+  lucide.createIcons({nodes:[document.getElementById('sec-history')]});
+}
+function buildHistoryChart(recs){
+  if(state.charts.history){state.charts.history.destroy();state.charts.history=null;}
+  var ctx=document.getElementById('historyChart'); if(!ctx) return;
+  var last=recs.slice(-12);
+  state.charts.history=new Chart(ctx,{type:'bar',
+    data:{labels:last.map(function(r){return hiLabel(r.ym);}),
+      datasets:[{data:last.map(function(r){return moneyRaw(r.amount);}),
+        backgroundColor:last.map(function(r,i){return i===last.length-1?'#0F4C81':'#99C3FF';}),
+        borderRadius:9,maxBarThickness:46}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:function(c){ var r=last[c.dataIndex]; var s=' '+money(r.amount); if(r.kwh) s+=' · '+tf('hiUnits',{n:Math.round(r.kwh).toLocaleString()}); return s; }}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11,family:chartFontFamily()},color:chartTextColor()}},
+              y:{grid:{color:chartGridColor()},ticks:{font:{size:11,family:chartFontFamily()},color:chartTextColor(),callback:function(v){return SYM[state.currency]+Math.round(v).toLocaleString();}}}}}});
 }
 
 // ══════════════════════════════════════════════════════
@@ -2824,9 +3150,54 @@ function getEcobotReply(msg){
       'โปรไฟล์ไลฟ์สไตล์ปัจจุบัน: อาชีพ = '+occStr+', '+hSize+' คนในครัวเรือน'+(flagList.length?' สัญญาณที่ตรวจพบ: '+flagList.join(', '):'')+'.',
       'Current lifestyle: Occupation = '+occStr+', household of '+hSize+(flagList.length?', detected habits: '+flagList.join(', ')+'.':'.'));
   }
+  // ── Answers grounded in the user's OWN data (diary + appliances) ──
+  var hist=historySorted();
+  // Bill diary / trend questions
+  if(/ขึ้นหรือลง|แนวโน้ม|ประวัติ|ย้อนหลัง|เดือนก่อน|เดือนที่แล้ว|สมุด|จดไว้|going up|going down|trend|diary|history|last month/.test(lc)){
+    if(hist.length>=2){
+      var la=hist[hist.length-1], pv=hist[hist.length-2];
+      var diff=la.amount-pv.amount, dPct=Math.abs(pv.amount>0?diff/pv.amount*100:0).toFixed(0);
+      var avgAll=hist.reduce(function(s,r){return s+r.amount;},0)/hist.length;
+      return th(
+        'จากสมุดค่าไฟของคุณ: บิล'+hiLabel(la.ym)+' อยู่ที่ '+money(la.amount)+(la.kwh?' ('+Math.round(la.kwh)+' หน่วย)':'')+' '
+        +(diff>0?'เพิ่มขึ้น ':'ลดลง ')+money(Math.abs(diff))+' ('+dPct+'%) เทียบกับ'+hiLabel(pv.ym)
+        +' ค่าเฉลี่ยที่ผ่านมาคือ '+money(avgAll)+'/เดือน'
+        +(diff>0?' — ลองเปิดหน้า "ผู้ช่วยประหยัดไฟ" ดูวิธีลดที่เหมาะกับบ้านคุณนะครับ':' — ทำได้ดีมาก รักษาระดับนี้ไว้ครับ!'),
+        'From your bill diary: '+hiLabel(la.ym)+' was '+money(la.amount)+(la.kwh?' ('+Math.round(la.kwh)+' units)':'')+', '
+        +(diff>0?'up ':'down ')+money(Math.abs(diff))+' ('+dPct+'%) vs '+hiLabel(pv.ym)
+        +'. Your average so far is '+money(avgAll)+'/month.'
+        +(diff>0?' Check the Savings Coach page for ways to bring it down.':' Nice work — keep it up!'));
+    }
+    if(hist.length===1){
+      var only=hist[0];
+      return th('ตอนนี้คุณจดไว้เดือนเดียว ('+hiLabel(only.ym)+': '+money(only.amount)+') จดเพิ่มอีกสักเดือน ผมจะบอกได้เลยว่าค่าไฟขึ้นหรือลงครับ',
+                'You have one month recorded ('+hiLabel(only.ym)+': '+money(only.amount)+'). Add one more and I can tell you if your bill is going up or down.');
+    }
+    return th('ยังไม่มีข้อมูลในสมุดค่าไฟเลยครับ ลองเปิดหน้า "สมุดค่าไฟ" แล้วจดยอดบิลเดือนล่าสุดก่อน แล้วผมจะวิเคราะห์แนวโน้มให้ได้เลย',
+              'Your bill diary is empty. Open the Bill Diary page and record your latest bill — then I can analyse your trend.');
+  }
+  // Which appliance costs the most
+  if(/กินไฟ|เปลืองไฟ|แพงสุด|แพงที่สุด|มากที่สุด|which appliance|costs the most|most expensive|biggest user/.test(lc)){
+    var arr=getApplianceResults();
+    if(arr.items.length){
+      var sorted=arr.items.slice().sort(function(a,b){return b.kwh-a.kwh;});
+      var top=sorted[0], second=sorted[1];
+      var costPerKwh=arr.totalKwh>0?arr.tariff.total/arr.totalKwh:4.4;
+      var topPct=arr.totalKwh>0?Math.round(top.kwh/arr.totalKwh*100):0;
+      return th(
+        'จากเครื่องใช้ที่คุณกรอกไว้ ตัวที่กินไฟที่สุดคือ "'+top.name+'" ประมาณ '+Math.round(top.kwh)+' หน่วย/เดือน ('+topPct+'% ของทั้งบ้าน) คิดเป็นเงินราว '+money(top.kwh*costPerKwh)+'/เดือน'
+        +(second?' อันดับสองคือ "'+second.name+'" ('+Math.round(second.kwh)+' หน่วย)':'')
+        +' ลดชั่วโมงการใช้ตัวนี้ลงวันละนิด เห็นผลชัดที่สุดครับ',
+        'From your appliances, the biggest user is "'+top.name+'" at ~'+Math.round(top.kwh)+' units/month ('+topPct+'% of your home), costing about '+money(top.kwh*costPerKwh)+'/month.'
+        +(second?' Second place: "'+second.name+'" ('+Math.round(second.kwh)+' units).':'')
+        +' Trimming its daily hours is your fastest win.');
+    }
+    return th('ยังไม่รู้เลยครับว่าบ้านคุณมีเครื่องใช้อะไรบ้าง ลองเปิดหน้า "เครื่องใช้ไฟฟ้า" แล้วเพิ่มของที่ใช้จริง เดี๋ยวผมบอกให้เลยว่าตัวไหนกินไฟที่สุด',
+              'I don\'t know your appliances yet. Add them on the My Appliances page and I\'ll tell you exactly which one costs the most.');
+  }
   if(/hello|hi|hey|สวัสดี|หวัดดี/.test(lc))
-    return th('สวัสดี! ผมคือ Ecobot ที่ปรึกษาพลังงาน AI ของคุณ ถามผมได้เลยเกี่ยวกับค่าไฟ การประหยัด หรือโซลาร์เซลล์',
-              'Hi! I\'m Ecobot, your AI energy advisor. Ask me about bills, saving tips, solar panels, or tariff rates — I\'m here to help!');
+    return th('สวัสดีครับ! ผมคือ Ecobot ผู้ช่วยเรื่องค่าไฟ ผมตอบจากข้อมูลจริงที่คุณกรอกไว้ในแอปได้เลย ลองถามว่า "เครื่องใช้ไหนกินไฟที่สุด" หรือ "ค่าไฟบ้านฉันขึ้นหรือลง" ดูสิครับ',
+              'Hi! I\'m Ecobot. I answer from the data you\'ve entered in this app — try "Which appliance costs the most?" or "Is my bill going up or down?"');
   if(/save|saving|reduce|ประหยัด|ลด/.test(lc)){
     var saveBase=th('คุณสามารถประหยัดได้ถึง 15% เพียงเปลี่ยนพฤติกรรม เช่น ตั้งแอร์ 26°C ถอดปลั๊กอุปกรณ์ที่ไม่ใช้ นั่นคือประมาณ '+money(bill.total*.15)+' ต่อเดือน',
       'You can save up to 15% through habit changes alone — set AC to 26°C, unplug idle devices. That\'s about '+money(bill.total*.15)+'/month');
@@ -2841,6 +3212,10 @@ function getEcobotReply(msg){
       'At '+energy(kwh)+'/month, your estimated bill is approximately '+bm+' (including Ft charges and 7% VAT)');
     if(hSize>1) billStr+=th(' สำหรับ '+hSize+' คน คิดเป็น '+money(bill.total/hSize)+'/คน/เดือน',
       ' — for your household of '+hSize+', that\'s '+money(bill.total/hSize)+' per person per month.');
+    if(hist.length){ var lastRec=hist[hist.length-1];
+      billStr+=th(' ส่วนบิลจริงล่าสุดที่คุณจดไว้ในสมุดค่าไฟ ('+hiLabel(lastRec.ym)+') คือ '+money(lastRec.amount),
+        ' Your latest recorded bill ('+hiLabel(lastRec.ym)+') was '+money(lastRec.amount)+'.');
+    }
     return billStr;
   }
   if(/tariff|rate|tier|อัตรา|ค่าไฟฐาน/.test(lc))
@@ -2860,8 +3235,8 @@ function getEcobotReply(msg){
   if(/compare|เปรียบเทียบ/.test(lc))
     return th('เปรียบเทียบกลยุทธ์: Quick Wins ง่ายที่สุด ประหยัด '+money(bill.total*.15)+'/เดือน | Smart Tech ประหยัด '+money(bill.total*.26)+'/เดือน | Long-Term ประหยัดได้สูงสุด '+money(bill.total*.45)+'/เดือน',
               'Strategy comparison: Quick Wins (free, save '+money(bill.total*.15)+'/mo) · Smart Tech (save '+money(bill.total*.26)+'/mo) · Long-Term Investment (max save '+money(bill.total*.45)+'/mo).');
-  return th('ขอบคุณที่ถามครับ! ลองถามเกี่ยวกับ ค่าไฟ การประหยัดพลังงาน เครื่องปรับอากาศ โซลาร์เซลล์ อัตราค่าไฟ หรือกลยุทธ์ SmartVolt',
-            'Thanks for asking! Try asking me about your electricity bill, saving energy, air conditioning, solar panels, tariff rates, or SmartVolt strategies.');
+  return th('ผมยังไม่ค่อยเข้าใจคำถามนี้ครับ ลองถามแบบนี้ดู: "เดือนนี้ค่าไฟเท่าไหร่" · "เครื่องใช้ไหนกินไฟที่สุด" · "ค่าไฟบ้านฉันขึ้นหรือลง" หรือถามเรื่องแอร์ โซลาร์เซลล์ และวิธีประหยัดก็ได้ครับ',
+            'I didn\'t quite get that. Try: "What\'s my bill this month?" · "Which appliance costs the most?" · "Is my bill going up or down?" — or ask about AC, solar, and ways to save.');
 }
 // Ecobot send events
 document.getElementById('ecobotSend').addEventListener('click',sendEcobotMsg);
@@ -3059,6 +3434,7 @@ function svReanalyze(){
 var TOUR=[
   {ic:'sparkles',  sec:null,        tk:'tour1Title', bk:'tour1Body'},
   {ic:'gauge',     sec:'dashboard', tk:'tour2Title', bk:'tour2Body'},
+  {ic:'book-open', sec:'history',   tk:'tourHistTitle', bk:'tourHistBody'},
   {ic:'plug',      sec:'appliances',tk:'tour3Title', bk:'tour3Body'},
   {ic:'calculator',sec:'billsim',   tk:'tour4Title', bk:'tour4Body'},
   {ic:'brain',     sec:'smartvolt', tk:'tour5Title', bk:'tour5Body'},
